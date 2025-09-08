@@ -1,0 +1,21 @@
+[project]
+name = "external_tts_dia"
+version = "0.0.0"
+requires-python = ">= 3.11, < 3.14"
+dependencies = [
+    "setuptools",
+    "descript-audio-codec>=1.0.0",
+    "gradio>=5.25.2",
+    "huggingface-hub>=0.30.2",
+    "numpy>=2.2.4",
+    "pydantic>=2.11.3",
+    "safetensors>=0.5.3",
+    "soundfile>=0.13.1",
+    "torch==2.6.0",
+    "torchaudio==2.6.0",
+    "triton==3.2.0 ; sys_platform == 'linux'",
+    "external_tools"
+]
+
+[tool.uv.sources]
+external_tools = { path = "../../external_tools" }

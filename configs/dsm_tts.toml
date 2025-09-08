@@ -1,0 +1,36 @@
+[main]
+output_folder = "outputs"
+queue_addr = "tcp://*:34890"
+
+[runner]
+threads = 2
+
+[runner.submitit]
+slurm = true
+partition = "kyutai"
+max_gpus = 1
+gpus_per_task = 1
+mem_per_gpu = 0
+time = 1440
+
+
+[asr]
+provider = "whisper_hf"
+
+[asr.whisper_hf]
+model_name = "openai/whisper-large-v3"
+
+[tts.dsm_tts]
+command = ["uv", "run", "external_tts_moshi.py"]
+cwd = "external_tts/moshi"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+[tts.dsm_tts_turns]
+command = ["uv", "run", "external_turns_moshi.py"]
+cwd = "external_tts/moshi"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+[dataset]
+datasets = ["ntrex_eng", "ntrex_fra", "synth_dialogs_fr", "synth_dialogs_en"]

@@ -1,0 +1,58 @@
+[project]
+name = "tts_longeval"
+requires-python = ">= 3.11"
+description = "Long form eval set for TTS models."
+dependencies = [
+    "elevenlabs",
+    "einops",
+    "jiwer",
+    "julius",
+    "more_itertools",
+    "numpy",
+    "omegaconf",
+    "parsy",
+    "pydantic>=2",
+    "pyzmq",
+    "requests",
+    "setuptools",
+    "submitit",
+    "sphn",
+    "torchaudio",
+    "transformers",
+    "treetable",
+    "external_tools",
+]
+authors = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
+maintainers = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
+license = {text = "MIT"}
+dynamic = ["version"]
+readme = "README.md"
+
+[project.scripts]
+tts_longeval_run = "tts_longeval.run:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "tts_longeval.__version__"}
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+dev = [
+    "pyright",
+    "pytest",
+    "flake8",
+    "pre-commit",
+]
+
+[tool.setuptools.packages]
+find = {namespaces = false}
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+exclude = [ "external_tts", "tts_longeval/normalizers/english.py", "tts_longeval/wavlm.py" ]
+
+[tool.uv.sources]
+external_tools = { path = "./external_tools" }

@@ -1,0 +1,13 @@
+[project]
+name = "external_tts_moshi"
+version = "0.0.0"
+requires-python = ">= 3.11, < 3.14"
+dependencies = [
+    "moshi @ git+https://git@github.com/kyutai-labs/moshi.git#egg=moshi&subdirectory=moshi",
+    "external_tools",
+    "setuptools",
+]
+
+[tool.uv.sources]
+moshi = { path = "/home/alex/projs/moshi/moshi", editable = true}
+external_tools = { path = "../../external_tools" }

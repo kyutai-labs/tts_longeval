@@ -1,0 +1,27 @@
+[project]
+name = "external_tools"
+requires-python = ">= 3.11"
+description = "Tools for external TTS."
+dependencies = [
+    "huggingface_hub",
+    "sphn",
+    "torch",
+]
+authors = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
+maintainers = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
+license = {text = "MIT"}
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "external_tools.__version__"}
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+dev = [
+]
+
+[tool.setuptools.packages]
+find = {namespaces = false}

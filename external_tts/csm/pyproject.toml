@@ -1,0 +1,21 @@
+[project]
+name = "run_csm"
+version = "0.0.0"
+requires-python = ">= 3.11, < 3.12"
+dependencies = [
+    "torch==2.4.0",
+    "torchaudio==2.4.0",
+    "tokenizers==0.21.0",
+    "transformers==4.49.0",
+    "huggingface_hub==0.28.1",
+    "moshi==0.2.2",
+    "torchtune==0.4.0",
+    "torchao==0.9.0",
+    "setuptools",
+    "silentcipher@git+https://github.com/SesameAILabs/silentcipher@master",
+    "sphn>=0.2",
+    "external_tools",
+]
+
+[tool.uv.sources]
+external_tools = { path = "../../external_tools" }

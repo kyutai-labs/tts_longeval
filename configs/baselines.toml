@@ -1,0 +1,103 @@
+[main]
+output_folder = "outputs"
+queue_addr = "tcp://*:34974"
+
+[runner]
+threads = 2
+
+[runner.submitit]
+slurm = true
+partition = "kyutai"
+max_gpus = 1
+gpus_per_task = 1
+mem_per_gpu = 0
+time = 1440
+
+
+[asr]
+provider = "whisper_hf"
+
+[asr.whisper_hf]
+model_name = "openai/whisper-large-v3"
+
+
+[tts.chatterbox_full_maxturns_1]
+command = ["uv", "run", "external_tts_chatterbox.py", "--max-turns=1"]
+cwd = "external_tts/chatterbox"
+max_batch_size = 1
+supported_languages = ["en"]
+
+[tts.chatterbox_full_maxturns_6]
+command = ["uv", "run", "external_tts_chatterbox.py", "--max-turns=6"]
+cwd = "external_tts/chatterbox"
+max_batch_size = 1
+supported_languages = ["en"]
+need_tags = ["monologue"]
+
+[tts.base_orpheus_full_maxturns_1_c0]
+command = ["uv", "run", "external_tts_orpheus.py", "--max-turns=1", "--context=0"]
+cwd = "external_tts/orpheus"
+max_batch_size = 1
+supported_languages = ["en"]
+
+[tts.base_orpheus_full_maxturns_1_c1]
+command = ["uv", "run", "external_tts_orpheus.py", "--max-turns=1", "--context=1"]
+cwd = "external_tts/orpheus"
+max_batch_size = 1
+supported_languages = ["en"]
+need_tags = ["monologue"]
+
+[tts.base_orpheus_full_maxturns_4_c1]
+command = ["uv", "run", "external_tts_orpheus.py", "--max-turns=4", "--context=1"]
+cwd = "external_tts/orpheus"
+max_batch_size = 1
+supported_languages = ["en"]
+need_tags = ["monologue"]
+
+[tts.base_orpheus_full_maxturns_8_c1]
+command = ["uv", "run", "external_tts_orpheus.py", "--max-turns=8", "--context=1"]
+cwd = "external_tts/orpheus"
+max_batch_size = 1
+supported_languages = ["en"]
+need_tags = ["monologue"]
+
+[tts.base_dia_c1_t1]
+command = ["uv", "run", "external_tts_dia.py", "-c", "1", "-t", "1"]
+cwd = "external_tts/dia"
+max_batch_size = 1
+supported_languages = ["fr", "en"]
+
+[tts.base_dia_c0_t1]
+command = ["uv", "run", "external_tts_dia.py", "-c", "0", "-t", "1"]
+cwd = "external_tts/dia"
+max_batch_size = 1
+supported_languages = ["fr", "en"]
+
+[tts.csm_mad30_c1_default]
+command = ["uv", "run", "external_tts_csm.py", "-d", "20.", "-c", "1", "-s", "default"]
+cwd = "external_tts/csm"
+max_batch_size = 1
+supported_languages = ["en"]
+
+[tts.csm_mad30_c0_default]
+command = ["uv", "run", "external_tts_csm.py", "-d", "20.", "-c", "0", "-s", "default"]
+cwd = "external_tts/csm"
+max_batch_size = 1
+supported_languages = ["en"]
+
+[tts.csm_mad30_c6_default]
+command = ["uv", "run", "external_tts_csm.py", "-d", "20.", "-c", "6", "-s", "default"]
+cwd = "external_tts/csm"
+max_batch_size = 1
+supported_languages = ["en"]
+need_tags = ["dialog"]
+
+[tts.csm_mad30_c12_default]
+command = ["uv", "run", "external_tts_csm.py", "-d", "20.", "-c", "12", "-s", "default"]
+cwd = "external_tts/csm"
+max_batch_size = 1
+supported_languages = ["en"]
+need_tags = ["dialog"]
+
+[dataset]
+datasets = ["ntrex_eng", "ntrex_fra", "synth_dialogs_fr", "synth_dialogs_en"]
