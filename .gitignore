@@ -1,9 +1,7 @@
 build
 __pycache__
 /tts_longeval.egg-info
-/dataset
-/dataset_pre
 /outputs
-/outputs_clean
+/models/*.pth
 *.egg-info
 *.ipynb

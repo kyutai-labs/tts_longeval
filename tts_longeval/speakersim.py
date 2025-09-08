@@ -15,6 +15,7 @@ from .loadable import Loadable
 from .task import BatchedTask
 from .utils import write_and_rename
 from .wavlm import load_wavlm_speaker_model, WAVLM_SPEAKER_SIM_PATH
+from external_tools.speaker import hf_get
 
 
 logger = logging.getLogger(__name__)
@@ -189,7 +190,8 @@ class SpeakerSimilarityTask(BatchedTask[SpeakerSimilarity, tuple[Sample, Path]])
 
     def __call__(self, loaded: SpeakerSimilarity, args: list[tuple[Sample, Path]]):
         for sample, file in args:
-            result = loaded.get_result(sample.speaker_audios, file)
+            speaker_audios = [hf_get(speaker_audio) for speaker_audio in sample.speaker_audios]
+            result = loaded.get_result(speaker_audios, file)
             if result is None:
                 continue
             with write_and_rename(file.with_suffix('.speaker.json'), 'w') as fout:

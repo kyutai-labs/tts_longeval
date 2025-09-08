@@ -11,7 +11,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-WAVLM_SPEAKER_SIM_PATH = Path("/lustre/scwpod02/client/kyutai/models/audio_models/speaker_sim/wavlm_large_finetune.pth")
+WAVLM_SPEAKER_SIM_PATH = Path("./models/wavlm_large_finetune.pth")
 
 
 class Res2Conv1dReluBn(nn.Module):
