@@ -15,6 +15,7 @@ We recommand that you work from a clone of this repository:
 git clone https://github.com/kyutai-labs/tts_longeval.git
 cd tts_longeval
 git submodule init
+git submodule update
 ```
 
 You will need to download the WavLM speaker similarity model used by [F5-TTS](https://github.com/SWivid/F5-TTS/tree/main/src/f5_tts/eval#download-evaluation-model-checkpoints), and save it under `./models/wavlm_large_finetune.pth`.
