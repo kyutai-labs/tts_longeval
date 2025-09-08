@@ -5,6 +5,5 @@ __pycache__
 /dataset_pre
 /outputs
 /outputs_clean
-uv.lock
 *.egg-info
 *.ipynb
