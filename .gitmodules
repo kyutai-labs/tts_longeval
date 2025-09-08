@@ -3,4 +3,4 @@
 	url = https://github.com/SesameAILabs/csm.git
 [submodule "external_tts/dia/dia"]
 	path = external_tts/dia/dia
-	url = https://github.com/nari-labs/dia.git
+	url = https://github.com/nari-labs/dia
