@@ -78,12 +78,14 @@ wheels = [
 name = "external-tools"
 source = { directory = "../../external_tools" }
 dependencies = [
+    { name = "huggingface-hub" },
     { name = "sphn" },
     { name = "torch" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "huggingface-hub" },
     { name = "sphn" },
     { name = "torch" },
 ]
