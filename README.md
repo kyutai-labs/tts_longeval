@@ -118,6 +118,7 @@ supported_languages = ["fr", "en"]                 # supported languages by the 
 
 [dataset]
 datasets = ["ntrex_eng", "ntrex_fra"]  # each entry should correspond to a .jsonl file in ./datasets/
+speaker_audio_root = 'hf-dataset://kyutai/voices_tts_longeval'  # root HF repo or folder where to look for speaker audio files
 ```
 
 
@@ -132,6 +133,7 @@ Each dataset is a JSONL file, with each line being a dict with the following ent
     for monologues, and two entries for dialogs. `.wav` should be preferred for compatibility. Note that some
     TTS backends require the corresponding text to be available as a `.txt` file next to the `.wav`.
     DSM TTS models with cross attention speaker conditioning require a `.safetensors` file containing the speaker embeddings.
+    Those files can come from HuggingFace, see `speaker_audio_root` in the config above.
 - `language`: language code, e.g. `en` or `fr`. This is used to skip generation for entries for a given TTS backend
     if the language is not supported.
 - `tags`: arbitrary set of tags which can be used to further filter datapoints (see `--tags` in the main command).
@@ -177,7 +179,7 @@ for each batch.
 Note that this system is not at all fault tolerant, and if one worker goes away in the middle, you would have to relaunch the main command. It is however idempotent, and it should eventually complete all tasks!
 
 
-### Combinatorial parser French normalizer
+### Parser combinator based French normalizer
 
 The great [English normalizer](https://github.com/openai/whisper/blob/main/whisper/normalizers/english.py) released by OpenAI
 has been heavily used to normalize english texts before computing WER. In particular, it tries to convert all numbers and ordinals

@@ -10,8 +10,7 @@ import torch
 from .audio import Smoother
 
 
-def hf_get(filename: str | Path, hf_repo: str | None = None,
-           check_local_file_exists: bool = False) -> Path:
+def hf_get(filename: str | Path) -> Path:
     if isinstance(filename, Path):
         return filename
     if filename.startswith("hf://"):
@@ -20,7 +19,7 @@ def hf_get(filename: str | Path, hf_repo: str | None = None,
         filename = "/".join(parts[2:])
         return Path(hf_hub_download(repo_name, filename))
     elif filename.startswith("hf-dataset://"):
-        parts = filename.removeprefix("hf://").split("/")
+        parts = filename.removeprefix("hf-dataset://").split("/")
         repo_name = parts[0] + "/" + parts[1]
         filename = "/".join(parts[2:])
         return Path(hf_hub_download(repo_name, filename, repo_type='dataset'))
@@ -28,11 +27,6 @@ def hf_get(filename: str | Path, hf_repo: str | None = None,
         # Provide a way to force the read of a local file.
         filename = filename.removeprefix("file://")
         return Path(filename)
-    elif hf_repo is not None:
-        if check_local_file_exists:
-            if Path(filename).exists():
-                return Path(filename)
-        return Path(hf_hub_download(hf_repo, filename))
     else:
         return Path(filename)
 

@@ -116,7 +116,6 @@ def main():
     tts_models: dict[str, LoadableTTS] = {}
     to_load = list(config.tts.items())
     to_load += list(config.tts11.items())
-    to_load += list(config.ttsiw.items())
     for name, tts_config in to_load:
         tts_model = tts_config.get(name)
         if tts_model is None:

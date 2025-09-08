@@ -55,4 +55,4 @@ venv = ".venv"
 exclude = [ "external_tts", "tts_longeval/normalizers/english.py", "tts_longeval/wavlm.py" ]
 
 [tool.uv.sources]
-external_tools = { path = "./external_tools" }
+external_tools = { path = "./external_tools", editable = true }

@@ -18,4 +18,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-external_tools = { path = "../../external_tools" }
+external_tools = { path = "../../external_tools", editable = true }

@@ -10,6 +10,7 @@ dependencies = [
     "numpy>=2.2.4",
     "pydantic>=2.11.3",
     "safetensors>=0.5.3",
+    "numba==0.61.2",
     "soundfile>=0.13.1",
     "torch==2.6.0",
     "torchaudio==2.6.0",
@@ -18,4 +19,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-external_tools = { path = "../../external_tools" }
+external_tools = { path = "../../external_tools", editable = true }

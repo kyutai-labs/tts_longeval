@@ -44,7 +44,6 @@ class Sample(BaseModel):
     turns: list[str]
     speaker_audios: list[str]
     language: str = 'en'
-    reference_audio: Path | None = None
     tags: list[str] = Field(default_factory=list)
 
     @field_validator('turns', mode='after')

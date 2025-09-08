@@ -9,5 +9,4 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-moshi = { path = "/home/alex/projs/moshi/moshi", editable = true}
-external_tools = { path = "../../external_tools" }
+external_tools = { path = "../../external_tools", editable = true }

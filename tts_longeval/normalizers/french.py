@@ -2,7 +2,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 """Our own tentative at making a French normalizer, in particular for numbers. Not heavily
-tested and not as complete as the one for English developed by OpenAI. We use combinatorial parsers
+tested and not as complete as the one for English developed by OpenAI. We use parser combinators
 with `parsy`, which makes it quite nice and compact to declare new substitution rules."""
 import re
 from pathlib import Path
