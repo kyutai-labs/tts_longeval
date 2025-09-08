@@ -111,8 +111,8 @@ model_path = "PATH_TO_WAVLM_SPEAKERSIM_MODEL"      # if stored in a different pl
 [tts.my_tts_name]    # `my_tts_name` can be anything and will be the name of the method in all reporting.
 # This kind of entries can be repeated as many times as needed to support different models.
 # The command launched should verify the TTS wrapper protocol described after.
-command = ["uv", "run", "external_tts_moshi.py"]   # command to run, can be anything, and will run from `cwd` after.
-cwd = "external_tts/moshi"                         # working directory for the command.
+command = ["uv", "run", "external_tts_dsm.py"]     # command to run, can be anything, and will run from `cwd` after.
+cwd = "external_tts/dsm"                           # working directory for the command.
 max_batch_size = 32                                # max batch size supported by the model.
 supported_languages = ["fr", "en"]                 # supported languages by the TTS.
 

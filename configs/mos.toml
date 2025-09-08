@@ -21,8 +21,8 @@ provider = "whisper_hf"
 model_name = "openai/whisper-large-v3"
 
 [tts.dsm_tts_rc]
-command = ["uv", "run", "external_tts_moshi.py"]
-cwd = "external_tts/moshi"
+command = ["uv", "run", "external_tts_dsm.py"]
+cwd = "external_tts/dsm"
 max_batch_size = 32
 supported_languages = ["fr", "en"]
 
