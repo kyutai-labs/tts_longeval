@@ -11,7 +11,7 @@ from chatterbox.models.t3.modules import learned_pos_emb
 import sphn
 import torch
 
-from external_tools.speaker import Smoother
+from external_tools.speaker import Smoother, hf_get
 
 
 def new_forward(self, x):
@@ -67,8 +67,9 @@ def main():
                 to_generate = " ".join(turn.strip() for _, turn in turns[:turns_to_generate])
                 turns = turns[turns_to_generate:]
                 print("Generating", to_generate)
+                audio_prompt_path = hf_get(item['speaker_audios'][speaker_index])
                 try:
-                    wav = model.generate(to_generate, audio_prompt_path=item['speaker_audios'][speaker_index])
+                    wav = model.generate(to_generate, audio_prompt_path=str(audio_prompt_path))
                 except ValueError:
                     print("Input was too long, removing one turn")
                     turns_to_generate -= 1

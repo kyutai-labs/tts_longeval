@@ -11,7 +11,6 @@ from .audio import Smoother
 
 
 def hf_get(filename: str | Path) -> Path:
-    print("WTF", filename)
     if isinstance(filename, Path):
         return filename
     if filename.startswith("hf://"):

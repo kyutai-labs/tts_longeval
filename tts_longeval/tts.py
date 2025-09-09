@@ -200,7 +200,8 @@ class TTSTask(BatchedTask[TTS, tuple[Sample, Path]]):
 
 
 class LoadableElevenAPI(LoadableTTS['LoadableElevenAPI']):
-    """An API based TTS, using ElevenLabs."""
+    """An API based TTS, using ElevenLabs. Note that we will look for a voice with the
+    last part of the speaker audio filename in the available voices."""
     def __init__(self, id: str, model_id: str, supported_languages: list[str], need_tags: list[str]):
         from elevenlabs.client import ElevenLabs
         api_key = os.environ['ELEVENLAB_API_KEY']
