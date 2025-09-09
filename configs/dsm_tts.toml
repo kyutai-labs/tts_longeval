@@ -26,10 +26,10 @@ cwd = "external_tts/dsm"
 max_batch_size = 32
 supported_languages = ["fr", "en"]
 
-[tts.dsm_tts_turns]
-command = ["uv", "run", "external_turns_dsm.py"]
+[tts.dsm_tts_turn]
+command = ["uv", "run", "external_turn_dsm.py"]
 cwd = "external_tts/dsm"
-max_batch_size = 32
+max_batch_size = 1
 supported_languages = ["fr", "en"]
 
 [dataset]

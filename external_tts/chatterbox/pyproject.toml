@@ -3,7 +3,7 @@ name = "external_tts_orpheus"
 version = "0.0.0"
 requires-python = ">= 3.11, < 3.12"
 dependencies = [
-    "chatterbox-tts",
+    "chatterbox-tts==0.1.1",
     "external_tools",
     "resemble-perth",
     "setuptools",
