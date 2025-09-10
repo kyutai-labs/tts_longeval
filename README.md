@@ -63,7 +63,7 @@ We support the following metrics:
     whether the speaker is more similar to the corresponding speaker than to the other speaker in the dialog.
 
 Metrics can also be computed over quantiles of the audio duration or text length, e.g. over the first 25% of the words (WER),
-or 25% of seconds (for speaker similarity or DNSMOS), then from 25% to 50% etc..
+or 25% of seconds (for speaker similarity), then from 25% to 50% etc..
 
 
 ## Usage
@@ -71,7 +71,7 @@ or 25% of seconds (for speaker similarity or DNSMOS), then from 25% to 50% etc..
 All outputs will be stored under `./outputs`, although this can be changed by editing the entry `output_folder` in each `.toml` file.
 You can run the main command as follow
 ```
-uv run -m tts_longeval -c TOML_FILE.toml [-g N_GPU] [-D] [-s STAGE]
+uv run -m tts_longeval -c configs/TOML_FILE.toml [-g N_GPU] [-D] [-s STAGE]
 ```
 You will need to provide a config TOML file, indicating the available TTS model and the datasets to process, see
 after for the file format. `-g` allows to quickly change the number of GPU workers to schedule without
@@ -96,7 +96,7 @@ important errors are fixed, remove the `-D` flag to allow for as many samples as
 
 Here is the config format for the .toml file:
 
-```
+```toml
 [main]
 output_folder = "PATH_TO_OUTPUT"
 queue_addr = "tcp://*:TCP_PORT"
@@ -121,7 +121,8 @@ model_name = "openai/whisper-large-v3"  # ASR model to use.
 [speakersim]
 model_path = "PATH_TO_WAVLM_SPEAKERSIM_MODEL"      # if stored in a different place.
 
-[tts.my_tts_name]    # `my_tts_name` can be anything and will be the name of the method in all reporting.
+[tts.my_tts_name]
+# `my_tts_name` can be anything and will be the name of the method in all reporting.
 # This kind of entries can be repeated as many times as needed to support different models.
 # The command launched should verify the TTS wrapper protocol described after.
 command = ["uv", "run", "external_tts_dsm.py"]     # command to run, can be anything, and will run from `cwd` after.
@@ -134,7 +135,6 @@ supported_languages = ["fr", "en"]                 # supported languages by the 
 datasets = ["ntrex_eng", "ntrex_fra"]  # each entry should correspond to a .jsonl file in ./datasets/
 speaker_audio_root = 'hf-dataset://kyutai/voices_tts_longeval'  # root HF repo or folder where to look for speaker audio files
 ```
-
 
 ### Dataset format
 
@@ -159,7 +159,7 @@ Discussing some of the geeky internal details.
 
 ### TTS engine wrapper protocol
 
-Looking at `ExternalTTS` in `tts_longeval/tts.py`, one can see the protocol used to communicate with a TTS engine.
+Looking at `ExternalTTS` in [`tts_longeval/tts.py`](tts_longeval/tts.py), one can see the protocol used to communicate with a TTS engine.
 The TTS subprocess is started, loads the model, and start reading from stdin. The orchestrator dumps a single line JSON,
 made of a list with the following keys:
 ```
