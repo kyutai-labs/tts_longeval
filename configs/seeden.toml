@@ -36,7 +36,7 @@ model_name = "openai/whisper-large-v3"
 [dataset]
 datasets = ["seed_en"]
 
-[tts.dsm_tts_public_rc]
+[tts.dsm_tts_public]
 command = ["uv", "run", "external_tts_dsm.py", "--hf-repo=kyutai/tts-0.75b-en-public", "--cfg-coef=3", "--temp=0", "--nq=16"]
 cwd = "external_tts/dsm"
 max_batch_size = 32

@@ -6,11 +6,16 @@ TTS-Longeval serves a number of purposes:
 - Provide a number of TTS benchmarks (existing and new) and the possibility to extend to new ones.
     In particular, this includes computing some metrics, such as WER or speaker similarity.
 
+Note that this is mostly provided for reproducibility of our research work on [delayed stream modeling](https://github.com/kyutai-labs/delayed-streams-modeling/),
+as well as offering all the implementation details and hopefully some useful bits of code for others.
+I (adefossez) don't have enough time to offer full support for this repository, thus improvements or PR are unlikely
+to be accepted unless critical, and issues might not get a timely reply.
+
 
 ## Requirements
 
 You will need Python 3.11 at least, and you will need [uv](https://github.com/astral-sh/uv) installed.
-We recommand that you work from a clone of this repository:
+I recommand that you work from a clone of this repository:
 ```
 git clone https://github.com/kyutai-labs/tts_longeval.git
 cd tts_longeval
@@ -25,16 +30,16 @@ You will need to download the WavLM speaker similarity model used by [F5-TTS](ht
 
 ### Models
 
-We support the following TTS models: [ElevenLab](https://elevenlabs.io/) (through the API),
+This support the following TTS models: [ElevenLab](https://elevenlabs.io/) (through the API),
  [Dia](https://github.com/nari-labs/dia), [Orpheus](https://github.com/canopyai/Orpheus-TTS),
  [CSM](https://github.com/SesameAILabs/csm), [Chatterbox](https://github.com/resemble-ai/chatterbox/) and
  [Kyutai DSM TTS](https://github.com/kyutai-labs/delayed-streams-modeling/).
 
- Each TTS engine has its own folder in `external_tts/`, with its own separate environment using `uv`.
- In particular, the TTS engines execute in subprocesses which are isolated from the main orchestrator
- in TTS-Longeval, in order to reduce conflicts in requirements etc. We tried our best to offer the best performance for each.
- We tried our best to properly implement each one, but we might not be free of bug! Some models like CSM do not really
- support monologues for instance.
+Each TTS engine has its own folder in `external_tts/`, with its own separate environment using `uv`.
+In particular, the TTS engines execute in subprocesses which are isolated from the main orchestrator
+in TTS-Longeval, in order to reduce conflicts in requirements etc.
+I tried my best to properly implement each one, but this might not be free of bug! Some models like CSM do not really
+support monologues for instance.
 
 ### Datasets
 
@@ -77,6 +82,14 @@ of all workers and a traceback being printed. `-s` allows to select only a given
 
 Not all flags are documented here, use `uv run -m tts_longeval --help` or check `tts_longeval/__main__.py` for more
 information.
+
+**Important:** On the first run for a TTS engine, or one of the followup task like ASR, models will be downloaded, `uv` envs
+will be created etc. Heavy parallelism might lead to corrupted envs or downloads. I thus recommend running `uv sync --locked`
+in the root of the repo, as well as in each engine folder in `external_tts/`. In case of issue with the HuggingFace downloaded models,
+you can try deleted the corresponding folder in `.cache/huggingface/hug` and re-run.
+
+**Warning:** Some methods are expected to fail on some samples, especially in `configs/baselines.toml`. Once you are sure all
+important errors are fixed, remove the `-D` flag to allow for as many samples as possible to be processed.
 
 
 ### TOML config format
@@ -166,9 +179,9 @@ as a signal that the generation is over. This line should contain a single one-l
 
 ### ZeroMQ based job queue
 
-We wanted to have a no-dependency job queue for dispatching the generation and metric evaluation to any number of GPUs.
+I wanted to have a no-dependency job queue for dispatching the generation and metric evaluation to any number of GPUs.
 While Redis or similar would have been great, it also requires installing and running an external service.
-The file `tts_longeval/zmqueue` provides a minimalistic job queue. When running the main `tts_longeval` command,
+The file `tts_longeval/zmqueue.py` provides a minimalistic job queue. When running the main `tts_longeval` command,
 the main process will start listening on a given TCP port, and host a number of job queues, each with a name, corresponding to a
 single task (e.g. one metric or one model).
 Each GPU worker, either started locally or through SLURM (see `tts_longeval/runner.py`) will connect to this address.
@@ -177,7 +190,8 @@ Once the queue is empty, the worker moves to the next queue name etc. In particu
 the worker will stick to that queue, e.g. a specific model, in order to avoid reloading a different TTS model and subprocess
 for each batch.
 
-Note that this system is not at all fault tolerant, and if one worker goes away in the middle, you would have to relaunch the main command. It is however idempotent, and it should eventually complete all tasks!
+Note that this system is not at all fault tolerant, and if one worker goes away in the middle, you will have to relaunch the main command.
+It is however idempotent, and it should eventually complete all tasks!
 
 
 ### Parser combinator based French normalizer
@@ -185,8 +199,9 @@ Note that this system is not at all fault tolerant, and if one worker goes away 
 The great [English normalizer](https://github.com/openai/whisper/blob/main/whisper/normalizers/english.py) released by OpenAI
 has been heavily used to normalize english texts before computing WER. In particular, it tries to convert all numbers and ordinals
 to an all digits version. It also aims at supporting amounts of money with cents etc.
-One fun side quest for this repo was to reimplement a similar version for French, which you can find in `tts_longeval/normalizers/french.py`. It is not quite as complete, and honestly just using
-the English version on French gives nearly the same nubmers, but it was fun to play with [Parsy](https://parsy.readthedocs.io/en/latest/).
+One fun side quest for this repo was to reimplement a similar version for French, which you can find in `tts_longeval/normalizers/french.py`.
+It is not quite as complete, and honestly just using
+the English version on French gives nearly the same WER results, but it was fun to play with [Parsy](https://parsy.readthedocs.io/en/latest/).
 In particular, Parsy helps simplifying a lot the definition of the grammar and transformation over the text, while being super lightweight.
 
 
@@ -198,4 +213,3 @@ except `tts_longeval/wavlm.py` which is released under CC Attribution-ShareAlike
 
 [F5-TTS]: https://github.com/SWivid/F5-TTS
 [DSM]: https://github.com/kyutai-labs/delayed-streams-modeling/
-[voice-repo]: https://TODO

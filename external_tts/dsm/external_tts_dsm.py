@@ -66,8 +66,6 @@ def main():
     parser.add_argument("--shuffle-cross", action='store_true', help='Used for debugging.')
     parser.add_argument("--no-voices", action='store_true', help='Used for debugging.')
     parser.add_argument("--voice-is-prefix", action='store_true', help='Used for debugging.')
-    parser.add_argument("--bug", action='store_true', help='Used for debugging.')
-    parser.add_argument("--attention-sink-size", type=int)
 
     parser.add_argument("--device", type=str, default="cuda", help="Device on which to run, defaults to 'cuda'.")
     parser.add_argument("--half", action="store_const", const=torch.float16, default=torch.bfloat16,
@@ -78,18 +76,12 @@ def main():
 
     checkpoint_info = CheckpointInfo.from_hf_repo(
         args.hf_repo, args.moshi_weight, args.mimi_weight, args.tokenizer, args.config)
-    if args.attention_sink_size:
-        assert checkpoint_info.lm_config is not None
-        checkpoint_info.lm_config['attention_sink_size'] = args.attention_sink_size
 
     cfg_coef_conditioning = None
     tts_model = TTSModel.from_checkpoint_info(
         checkpoint_info, n_q=args.nq, temp=args.temp, cfg_coef=args.cfg_coef,
         max_padding=args.max_padding, initial_padding=args.initial_padding, final_padding=args.final_padding,
         padding_bonus=args.padding_bonus, device=args.device, dtype=args.dtype)
-    if args.bug:
-        assert tts_model.lm.fuser is not None
-        tts_model.lm.fuser.fuse2cond['sum'].remove('cfg')
     if tts_model.valid_cfg_conditionings:
         # Model was trained with CFG distillation.
         cfg_coef_conditioning = tts_model.cfg_coef
