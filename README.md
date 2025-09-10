@@ -91,6 +91,15 @@ you can try deleted the corresponding folder in `.cache/huggingface/hug` and re-
 **Warning:** Some methods are expected to fail on some samples, especially in `configs/baselines.toml`. Once you are sure all
 important errors are fixed, remove the `-D` flag to allow for as many samples as possible to be processed.
 
+### Existing config files
+
+Here are some of the provided config files:
+- `configs/librispeech.toml`: evaluates [`kyutai/tts-0.75b-en-public`](https://huggingface.co/kyutai/tts-0.75b-en-public)
+    on LibriSpeech with punctuation, following the protocol from [F5-TTS][F5-TTS].
+- `configs/seeden.toml`: evaluates [`kyutai/tts-0.75b-en-public`](https://huggingface.co/kyutai/tts-0.75b-en-public)
+    on [Seed TTS Eval en](https://github.com/BytedanceSpeech/seed-tts-eval).
+
+
 
 ### TOML config format
 
@@ -181,10 +190,10 @@ as a signal that the generation is over. This line should contain a single one-l
 
 I wanted to have a no-dependency job queue for dispatching the generation and metric evaluation to any number of GPUs.
 While Redis or similar would have been great, it also requires installing and running an external service.
-The file `tts_longeval/zmqueue.py` provides a minimalistic job queue. When running the main `tts_longeval` command,
+The file [`tts_longeval/zmqueue.py`](tts_longeval/zmqueue.py) provides a minimalistic job queue. When running the main `tts_longeval` command,
 the main process will start listening on a given TCP port, and host a number of job queues, each with a name, corresponding to a
 single task (e.g. one metric or one model).
-Each GPU worker, either started locally or through SLURM (see `tts_longeval/runner.py`) will connect to this address.
+Each GPU worker, either started locally or through SLURM (see [`tts_longeval/runner.py`](tts_longeval/runner.py)) will connect to this address.
 Each GPU worker first shuffles the list of possible queue names (e.g. models) and start polling the first corresponding queue.
 Once the queue is empty, the worker moves to the next queue name etc. In particular, until a queue has not been emptied,
 the worker will stick to that queue, e.g. a specific model, in order to avoid reloading a different TTS model and subprocess
@@ -199,7 +208,8 @@ It is however idempotent, and it should eventually complete all tasks!
 The great [English normalizer](https://github.com/openai/whisper/blob/main/whisper/normalizers/english.py) released by OpenAI
 has been heavily used to normalize english texts before computing WER. In particular, it tries to convert all numbers and ordinals
 to an all digits version. It also aims at supporting amounts of money with cents etc.
-One fun side quest for this repo was to reimplement a similar version for French, which you can find in `tts_longeval/normalizers/french.py`.
+One fun side quest for this repo was to reimplement a similar version for French, which you can find in
+[`tts_longeval/normalizers/french.py`](tts_longeval/normalizers/french.py).
 It is not quite as complete, and honestly just using
 the English version on French gives nearly the same WER results, but it was fun to play with [Parsy](https://parsy.readthedocs.io/en/latest/).
 In particular, Parsy helps simplifying a lot the definition of the grammar and transformation over the text, while being super lightweight.
@@ -209,6 +219,15 @@ In particular, Parsy helps simplifying a lot the definition of the grammar and t
 
 This code is released under the MIT license available in the `./LICENSE` file,
 except `tts_longeval/wavlm.py` which is released under CC Attribution-ShareAlike 3.0 Unported.
+
+The datasets are shared with the following licenses (license files available in `datasets/`):
+- `datasets/ntrex_*.jsonl`: derived from [NTREX](https://github.com/MicrosoftTranslator/NTREX),
+  originally under the CC-BY-SA-4.0 license, shared with the same license.
+- `datasets/synth_dialogs_*.jsonl`: shared under the CC-BY-4.0 license.
+- `libri_pc.jsonl`: processed from [LibriSpeech-PC](https://openslr.elda.org/145/),
+    originally under the CC BY 4.0 license, shared under the same license.
+- `seed_en.jsonl`: derived from [CommonVoice](https://commonvoice.mozilla.org/en), originally under CC 0 license,
+    released under the same license.
 
 
 [F5-TTS]: https://github.com/SWivid/F5-TTS
