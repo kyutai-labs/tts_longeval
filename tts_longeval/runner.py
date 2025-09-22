@@ -100,7 +100,6 @@ class Runner:
             kwargs['cpus_per_task'] = gpus * conf.cpus_per_gpu
             kwargs['partition'] = conf.partition
             kwargs['time'] = conf.time
-            kwargs['exclude'] = 'par2dc5-ai-prd-cl02s04dgx31'
         else:
             kwargs['gpus_per_node'] = conf.gpus_per_task
             kwargs['timeout_min'] = conf.time
