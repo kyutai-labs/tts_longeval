@@ -6,7 +6,8 @@ TTS-Longeval serves a number of purposes:
 - Provide a number of TTS benchmarks (existing and new) and the possibility to extend to new ones.
     In particular, this includes computing some metrics, such as WER or speaker similarity.
 
-Note that this is mostly provided for reproducibility of our research work on [delayed stream modeling](https://github.com/kyutai-labs/delayed-streams-modeling/),
+Note that this is mostly provided for reproducibility of our research work on [delayed stream modeling](https://arxiv.org/abs/2509.08753)
+whose inference code is provided on our repository [kyutai-labs/delated-streamins-modeling](https://github.com/kyutai-labs/delayed-streams-modeling/),
 as well as offering all the implementation details and hopefully some useful bits of code for others.
 I (adefossez) don't have enough time to offer full support for this repository, thus improvements or PR are unlikely
 to be accepted unless critical, and issues might not get a timely reply.
@@ -228,6 +229,20 @@ The datasets are shared with the following licenses (license files available in 
     originally under the CC BY 4.0 license, shared under the same license.
 - `seed_en.jsonl`: derived from [CommonVoice](https://commonvoice.mozilla.org/en), originally under CC 0 license,
     released under the same license.
+
+If you use this repository for research, please cite the following paper.
+
+```
+@techreport{kyutai2025streaming,
+      title={Streaming Sequence-to-Sequence Learning with Delayed Streams Modeling}, 
+      author={Neil Zeghidour and Eugene Kharitonov and Manu Orsini and Václav Volhejn and Gabriel de Marmiesse and Edouard Grave and Patrick Pérez and Laurent Mazaré and Alexandre Défossez},
+      year={2025},
+      eprint={2509.08753},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2509.08753}, 
+}
+```
 
 
 [F5-TTS]: https://github.com/SWivid/F5-TTS
