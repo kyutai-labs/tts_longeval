@@ -52,7 +52,7 @@ find = {namespaces = false}
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-exclude = [ "external_tts", "tts_longeval/normalizers/english.py", "tts_longeval/wavlm.py" ]
+exclude = [ "external_tts", "tts_longeval/normalizers/english.py", "tts_longeval/wavlm.py", "outputs" ]
 
 [tool.uv.sources]
 external_tools = { path = "./external_tools", editable = true }
