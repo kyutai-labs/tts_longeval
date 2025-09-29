@@ -21,6 +21,8 @@ dependencies = [
     "transformers",
     "treetable",
     "external_tools",
+    "pandas>=2.3.2",
+    "pyarrow>=21.0.0",
 ]
 authors = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
 maintainers = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
@@ -52,7 +54,7 @@ find = {namespaces = false}
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-exclude = [ "external_tts", "tts_longeval/normalizers/english.py", "tts_longeval/wavlm.py", "outputs" ]
+exclude = [ "external_tts", "tts_longeval/normalizers/english.py", "tts_longeval/wavlm.py", "outputs", ".venv" ]
 
 [tool.uv.sources]
 external_tools = { path = "./external_tools", editable = true }

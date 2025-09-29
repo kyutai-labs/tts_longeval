@@ -2,22 +2,23 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 import argparse
-from collections import defaultdict
 import json
 import logging
 import os
-from pathlib import Path
 import tomllib
+from collections import defaultdict
+from pathlib import Path
+
+import pandas as pd
 
 from tts_longeval.asr import ASRTask
 from tts_longeval.config import Config
 from tts_longeval.metrics import print_results_for_dataset
-from tts_longeval.task import Tasker, MultiTasker
-from tts_longeval.zmqueue import ZMQueue
 from tts_longeval.speakersim import SpeakerSimilarityTask
-from tts_longeval.tts import TTSTask, LoadableTTS
+from tts_longeval.task import MultiTasker, Tasker
+from tts_longeval.tts import LoadableTTS, TTSTask
 from tts_longeval.utils import init_logging
-
+from tts_longeval.zmqueue import ZMQueue
 
 logger = logging.getLogger(__name__)
 
@@ -32,60 +33,69 @@ def any_is_prefix(name: str, prefixes: list[str]) -> bool:
 def main():
     parser = argparse.ArgumentParser(description="TTS Long Eval.")
     parser.add_argument(
-        "-c", "--config",
+        "-c",
+        "--config",
         type=Path,
         default="tts_longeval.toml",
         help="Path to the configuration file.",
     )
     parser.add_argument(
-        "-D", "--debug",
-        action='store_true',
+        "-D",
+        "--debug",
+        action="store_true",
         help="Debug mode, errors will be fatal, logs will be tailed.",
     )
     parser.add_argument(
-        "-g", "--gpus",
+        "-g",
+        "--gpus",
         type=int,
         help="Override the number of gpus.",
     )
     parser.add_argument(
-        "-t", "--threads",
+        "-t",
+        "--threads",
         type=int,
         help="Override the number of threads.",
     )
     parser.add_argument(
-        "-T", "--tags",
-        action='append',
+        "-T",
+        "--tags",
+        action="append",
         default=[],
         help="Required tags.",
     )
     parser.add_argument(
-        "-d", "--dataset",
+        "-d",
+        "--dataset",
         dest="datasets",
         type=str,
-        action='append',
+        action="append",
         help="Select a subset of datasets.",
     )
     parser.add_argument(
-        "-m", "--model",
+        "-m",
+        "--model",
         dest="models",
         type=str,
-        action='append',
+        action="append",
         help="Select a subset of models.",
     )
     parser.add_argument(
-        "-v", "--verbose",
-        action='store_true',
+        "-v",
+        "--verbose",
+        action="store_true",
         help="More verbose logging.",
     )
 
-    STAGES = ['gen', 'asr', 'spk', 'met']
+    STAGES = ["gen", "asr", "spk", "met"]
     parser.add_argument(
-        "-s", "--stages",
+        "-s",
+        "--stages",
         dest="stages",
         type=str,
-        action='append',
+        action="append",
         choices=STAGES,
-        help="Select which steps to run. Repeat the flag to select multiples.",
+        help="Select which steps to run. Repeat the flag to select multiple.",
     )
     parser.add_argument(
         "--save-metrics",
@@ -96,8 +106,8 @@ def main():
     args = parser.parse_args()
     init_logging(args.verbose)
     if args.verbose:
-        os.environ['_TTS_LONGEVAL_VERBOSE'] = '1'
-    raw = tomllib.load(args.config.open('rb'))
+        os.environ["_TTS_LONGEVAL_VERBOSE"] = "1"
+    raw = tomllib.load(args.config.open("rb"))
     config = Config.model_validate(raw)
     if args.gpus is not None:
         config.runner.submitit.max_gpus = args.gpus
@@ -108,9 +118,9 @@ def main():
     if not args.stages:
         args.stages = STAGES
 
-    queue_root = config.main.output_folder / 'queues'
+    queue_root = config.main.output_folder / "queues"
     queue_root.mkdir(exist_ok=True, parents=True)
-    output_folder = config.main.output_folder / 'outputs'
+    output_folder = config.main.output_folder / "outputs"
     output_folder.mkdir(exist_ok=True, parents=True)
 
     tts_models: dict[str, LoadableTTS] = {}
@@ -152,18 +162,20 @@ def main():
                     continue
                 output_file = this_output_folder / (sample.id + ".wav")
                 all_pairs.append((sample, output_file))
-                pairs_per_dataset_per_method[dataset][tts_name].append((sample, output_file))
+                pairs_per_dataset_per_method[dataset][tts_name].append(
+                    (sample, output_file)
+                )
                 pairs_per_method[tts_name].append((sample, output_file))
 
     with ZMQueue(pull_address=config.main.queue_addr) as zmqueue:
-        if 'gen' in args.stages:
+        if "gen" in args.stages:
             gpu_taskers = []
             cpu_taskers = []
             for name, tts_model in tts_models.items():
                 this_pairs = pairs_per_method[name]
                 kept_pairs = []
                 for sample, file in this_pairs:
-                    if file.with_suffix('.done').exists():
+                    if file.with_suffix(".done").exists():
                         continue
                     kept_pairs.append((sample, file))
                 if not kept_pairs:
@@ -173,20 +185,34 @@ def main():
                 with queue.pusher() as pusher:
                     for pair in kept_pairs:
                         pusher.push(pair)
-                tasker = Tasker(tts_model.max_batch_size, TTSTask(debug=config.main.debug), tts_model, queue)
+                tasker = Tasker(
+                    tts_model.max_batch_size,
+                    TTSTask(debug=config.main.debug),
+                    tts_model,
+                    queue,
+                )
                 if tts_model.is_api:
                     cpu_taskers.append(tasker)
                 else:
                     gpu_taskers.append(tasker)
             if gpu_taskers or cpu_taskers:
-                runner = config.runner.get(config.main.output_folder / 'submitit', config.main.debug)
-                runner.run(MultiTasker(gpu_taskers), MultiTasker(cpu_taskers, should_init_logging=False))
-        if 'asr' in args.stages:
+                runner = config.runner.get(
+                    config.main.output_folder / "submitit", config.main.debug
+                )
+                runner.run(
+                    MultiTasker(gpu_taskers),
+                    MultiTasker(cpu_taskers, should_init_logging=False),
+                )
+        if "asr" in args.stages:
             all_pairs_for_asr = [
-                pair for pair in all_pairs if not pair[1].with_suffix('.asr.json').exists()
+                pair
+                for pair in all_pairs
+                if not pair[1].with_suffix(".asr.json").exists()
             ]
             if all_pairs_for_asr:
-                logger.info(f"All samples are generated, will now transcribe {len(all_pairs_for_asr)} files.")
+                logger.info(
+                    f"All samples are generated, will now transcribe {len(all_pairs_for_asr)} files."
+                )
                 asr_model = config.asr.get()
                 queue = zmqueue.new_queue("__asr")
                 tasker = Tasker(1, ASRTask(debug=config.main.debug), asr_model, queue)
@@ -194,37 +220,63 @@ def main():
                     for pair in all_pairs_for_asr:
                         if pair[1].exists():
                             pusher.push(pair)
-                runner = config.runner.get(config.main.output_folder / 'submitit', config.main.debug)
+                runner = config.runner.get(
+                    config.main.output_folder / "submitit", config.main.debug
+                )
                 runner.run(MultiTasker([tasker]), MultiTasker([]))
                 logger.info("All transcript are in.")
-        if 'spk' in args.stages:
+        if "spk" in args.stages:
             all_pairs_for_spk = [
-                pair for pair in all_pairs if not pair[1].with_suffix('.speaker.json').exists()
+                pair
+                for pair in all_pairs
+                if not pair[1].with_suffix(".speaker.json").exists()
             ]
             if all_pairs_for_spk:
-                logger.info(f"Will compute speaker similarity over {len(all_pairs_for_spk)} files.")
+                logger.info(
+                    f"Will compute speaker similarity over {len(all_pairs_for_spk)} files."
+                )
                 queue = zmqueue.new_queue("__spk")
-                tasker = Tasker(1, SpeakerSimilarityTask(debug=config.main.debug), config.speakersim, queue)
+                tasker = Tasker(
+                    1,
+                    SpeakerSimilarityTask(debug=config.main.debug),
+                    config.speakersim,
+                    queue,
+                )
                 with queue.pusher() as pusher:
                     for pair in all_pairs_for_spk:
                         if pair[1].exists():
                             pusher.push(pair)
-                runner = config.runner.get(config.main.output_folder / 'submitit', config.main.debug)
+                runner = config.runner.get(
+                    config.main.output_folder / "submitit", config.main.debug
+                )
                 runner.run(MultiTasker([tasker]), MultiTasker([]))
                 logger.info("All speaker sims are in.")
 
-    if 'met' in args.stages:
+    if "met" in args.stages:
         with config.metrics.get_pool() as pool:
             all_metrics = {}
+            all_metrics_by_sample = []
             for dataset, pairs_per_method in pairs_per_dataset_per_method.items():
                 print("=" * 64)
                 print(f"Results for dataset: {dataset}")
-                lines = print_results_for_dataset(pool, config.metrics, pairs_per_method)
+                lines, per_sample_metrics = print_results_for_dataset(
+                    pool, config.metrics, pairs_per_method
+                )
                 all_metrics[dataset] = lines
-                print('\n' + '-' * 64 + '\n')
+
+                per_sample_metrics["dataset"] = dataset
+                per_sample_metrics.set_index("dataset", append=True, inplace=True)
+                all_metrics_by_sample.append(per_sample_metrics)
+
+                print("\n" + "-" * 64 + "\n")
+
             if args.save_metrics is not None:
                 args.save_metrics.write_text(json.dumps(all_metrics))
+                all_metrics_by_sample = pd.concat(all_metrics_by_sample, axis=0)
+                all_metrics_by_sample.to_parquet(
+                    args.save_metrics.with_suffix(".parquet")
+                )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
