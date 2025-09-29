@@ -229,7 +229,10 @@ def main():
             all_pairs_for_spk = [
                 pair
                 for pair in all_pairs
-                if not pair[1].with_suffix(".speaker.json").exists()
+                if not (
+                    pair[1].with_suffix(".speaker.json").exists()
+                    and pair[1].with_suffix(".speaker.json").stat().st_size > 0
+                )
             ]
             if all_pairs_for_spk:
                 logger.info(
