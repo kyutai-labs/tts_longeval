@@ -1,0 +1,120 @@
+[main]
+output_folder = "/lustre/scwpod02/client/kyutai/vaclav/data/tts_longform_debug/2"
+queue_addr = "tcp://*:34890"
+
+[runner]
+threads = 2
+
+[runner.submitit]
+slurm = true
+partition = "kyutai"
+max_gpus = 1
+gpus_per_task = 1
+mem_per_gpu = 0
+time = 1440
+
+
+[asr]
+provider = "whisper_hf"
+
+[asr.whisper_hf]
+model_name = "openai/whisper-large-v3"
+
+
+[tts.opensourced]
+command = ["uv", "run", "external_tts_dsm.py"]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
+[tts.paper_samples]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_1085c9e7_250/config.json",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_1085c9e7_250/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
+[tts.16s_context]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_83406f68_450/config.json",
+    # "--moshi-weight=/home/vaclav/models/moshi/moshi_83406f68_450/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
+[tts.no_cfg_distillation_250]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_a87fa62c_250/config.json",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_a87fa62c_250/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
+[tts.no_cfg_distillation_500]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_a87fa62c_500/config.json",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_a87fa62c_500/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
+[tts.no_cfg_distillation_750]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_a87fa62c_750/config.json",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_a87fa62c_750/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
+[tts.ft_4min]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_08d1b9a5_240/config.json",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_08d1b9a5_240/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
+[tts.ft_12min]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_e564a37e_240/config.json",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_e564a37e_240/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
+[tts.ft_14min]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_baa0082f_240/config.json",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_baa0082f_240/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
+[dataset]
+datasets = ["wikibooks_en", "wikibooks_fr"]

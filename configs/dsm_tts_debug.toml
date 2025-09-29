@@ -1,0 +1,37 @@
+[main]
+output_folder = "/lustre/scwpod02/client/kyutai/vaclav/data/tts_longform_debug/1"
+queue_addr = "tcp://*:34890"
+
+[runner]
+threads = 2
+
+[runner.submitit]
+slurm = true
+partition = "kyutai"
+max_gpus = 1
+gpus_per_task = 1
+mem_per_gpu = 0
+time = 1440
+
+
+[asr]
+provider = "whisper_hf"
+
+[asr.whisper_hf]
+model_name = "openai/whisper-large-v3"
+
+[tts.dsm_tts]
+command = ["uv", "run", "external_tts_dsm.py"]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+[tts.dsm_tts_turn]
+command = ["uv", "run", "external_turn_dsm.py"]
+cwd = "external_tts/dsm"
+max_batch_size = 1
+supported_languages = ["fr", "en"]
+
+
+[dataset]
+datasets = ["wikibooks_en", "wikibooks_fr"]
