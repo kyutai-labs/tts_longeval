@@ -5,3 +5,5 @@ __pycache__
 /models/*.pth
 *.egg-info
 *.ipynb
+
+wikibooks_*.jsonl
