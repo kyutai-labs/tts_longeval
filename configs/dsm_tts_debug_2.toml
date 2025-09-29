@@ -43,7 +43,7 @@ supported_languages = ["fr", "en"]
 command = [
     "uv", "run", "external_tts_dsm.py",
     "--config=/home/vaclav/models/moshi/moshi_83406f68_450/config.json",
-    # "--moshi-weight=/home/vaclav/models/moshi/moshi_83406f68_450/checkpoint.safetensors",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_83406f68_450/checkpoint.safetensors",
 ]
 cwd = "external_tts/dsm"
 max_batch_size = 32
@@ -116,5 +116,17 @@ max_batch_size = 32
 supported_languages = ["fr", "en"]
 
 
+[tts.retrain_78706c83_500]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_78706c83_500/config.json",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_78706c83_500/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
+
 [dataset]
 datasets = ["wikibooks_en", "wikibooks_fr"]
+speaker_audio_root = "/lustre/scwpod02/client/kyutai/vaclav/data/tts_longform_debug/voices_tts_longeval/"
