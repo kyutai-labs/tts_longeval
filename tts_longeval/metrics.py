@@ -13,6 +13,8 @@ import pandas as pd
 import treetable as tt
 from pydantic import BaseModel, Field
 
+from tts_longeval.drift import get_drift_metrics
+
 from .data import Sample
 from .speakersim import get_speaker_sims
 from .wer import get_normalizer, get_wers
@@ -60,8 +62,11 @@ def collect_metrics(
             if speaker_sims is None:
                 speaker_sims = {}
             metrics["spks"] = speaker_sims
-        except Exception:
-            logger.error("Error while loading metrics for file %s", file)
+
+            drifts = get_drift_metrics(file, config.quantiles) or {}
+            metrics["drifts"] = drifts
+        except Exception as e:
+            logger.error("Error while loading metrics for file %s: %s", file, repr(e))
             raise
         return metrics
     logger.warning("Failed to find metrics for files: %r", files)

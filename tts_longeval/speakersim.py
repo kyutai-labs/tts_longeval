@@ -2,21 +2,20 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 """Speaker similarity metric."""
+import json
 import logging
 from pathlib import Path
-import json
 
-from pydantic import BaseModel
 import sphn
 import torch
+from external_tools.speaker import hf_get
+from pydantic import BaseModel
 
 from .data import Sample
 from .loadable import Loadable
 from .task import BatchedTask
 from .utils import write_and_rename
-from .wavlm import load_wavlm_speaker_model, WAVLM_SPEAKER_SIM_PATH
-from external_tools.speaker import hf_get
-
+from .wavlm import WAVLM_SPEAKER_SIM_PATH, load_wavlm_speaker_model
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ def get_speaker_sims(file: Path, quantiles: list[float]) -> dict[str, float] | N
     total = result.result_for_segment()
     metrics = {
         'sim': total.similarity,
-        'nn': total.is_best,
+        # 'nn': total.is_best,
     }
     duration = result.results[-1].end
     start = 0.
@@ -61,7 +60,7 @@ def get_speaker_sims(file: Path, quantiles: list[float]) -> dict[str, float] | N
         else:
             metrics.update({
                 f's_q{quantile}': chunk.similarity,
-                f'n_q{quantile}': chunk.is_best,
+                # f'n_q{quantile}': chunk.is_best,
             })
         start = end
     return metrics

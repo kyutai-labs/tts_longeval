@@ -34,7 +34,9 @@ def main():
                 model_root = match.group(1)
                 break
 
-        assert model_root is not None, f"Could not find --config in command: {command}"
+        if model_root is None:
+            print(f"Skipping, could not find --config in command: {command}")
+            continue
 
         print(model_root, "\n")
 

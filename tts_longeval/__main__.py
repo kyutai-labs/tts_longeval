@@ -13,6 +13,7 @@ import pandas as pd
 
 from tts_longeval.asr import ASRTask
 from tts_longeval.config import Config
+from tts_longeval.drift import DriftTask
 from tts_longeval.metrics import print_results_for_dataset
 from tts_longeval.speakersim import SpeakerSimilarityTask
 from tts_longeval.task import MultiTasker, Tasker
@@ -87,7 +88,7 @@ def main():
         help="More verbose logging.",
     )
 
-    STAGES = ["gen", "asr", "spk", "met"]
+    STAGES = ["gen", "asr", "spk", "drift", "met"]
     parser.add_argument(
         "-s",
         "--stages",
@@ -247,6 +248,36 @@ def main():
                 )
                 with queue.pusher() as pusher:
                     for pair in all_pairs_for_spk:
+                        if pair[1].exists():
+                            pusher.push(pair)
+                runner = config.runner.get(
+                    config.main.output_folder / "submitit", config.main.debug
+                )
+                runner.run(MultiTasker([tasker]), MultiTasker([]))
+                logger.info("All speaker sims are in.")
+
+        if "drift" in args.stages:
+            all_pairs_for_drift = [
+                pair
+                for pair in all_pairs
+                if not (
+                    pair[1].with_suffix(".drift.json").exists()
+                    and pair[1].with_suffix(".drift.json").stat().st_size > 0
+                )
+            ]
+            if all_pairs_for_drift:
+                logger.info(
+                    f"Will compute drift over {len(all_pairs_for_drift)} files."
+                )
+                queue = zmqueue.new_queue("__drift")
+                tasker = Tasker(
+                    1,
+                    DriftTask(debug=config.main.debug),
+                    config.drift,
+                    queue,
+                )
+                with queue.pusher() as pusher:
+                    for pair in all_pairs_for_drift:
                         if pair[1].exists():
                             pusher.push(pair)
                 runner = config.runner.get(

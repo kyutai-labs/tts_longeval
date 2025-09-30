@@ -4,6 +4,6 @@ __pycache__
 /outputs
 /models/*.pth
 *.egg-info
-*.ipynb
+playground.ipynb
 
 wikibooks_*.jsonl

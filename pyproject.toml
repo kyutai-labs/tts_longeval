@@ -23,6 +23,8 @@ dependencies = [
     "external_tools",
     "pandas>=2.3.2",
     "pyarrow>=21.0.0",
+    "scikit-learn>=1.7.2",
+    "moshi @ git+https://git@github.com/kyutai-labs/moshi.git#egg=moshi&subdirectory=moshi",
 ]
 authors = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
 maintainers = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
