@@ -128,5 +128,6 @@ supported_languages = ["fr", "en"]
 
 
 [dataset]
-datasets = ["wikibooks_en", "wikibooks_fr"]
+# datasets = ["wikibooks_en", "wikibooks_fr"]
+datasets = ["wikibooks_15000_en", "wikibooks_15000_fr"]
 speaker_audio_root = "/lustre/scwpod02/client/kyutai/vaclav/data/tts_longform_debug/voices_tts_longeval/"

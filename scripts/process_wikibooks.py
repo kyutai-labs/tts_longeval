@@ -6,7 +6,7 @@ from pathlib import Path
 import regex
 import tqdm
 
-TARGET_TEXT_LENGTH = 7500
+TARGET_TEXT_LENGTH = 15000
 N_TEXTS = 32
 
 REPO_ROOT = Path(__file__).parents[1]
@@ -111,12 +111,14 @@ def main():
                 }
             )
 
-        with (REPO_ROOT / "datasets" / f"wikibooks_{language}.jsonl").open("w") as f:
+        out_path = (
+            REPO_ROOT / "datasets" / f"wikibooks_{TARGET_TEXT_LENGTH}_{language}.jsonl"
+        )
+
+        with out_path.open("w") as f:
             for item in dataset:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
-            print(
-                f"Wrote {len(dataset)} samples to {REPO_ROOT / 'datasets' / f'wikibooks_{language}.jsonl'}"
-            )
+            print(f"Wrote {len(dataset)} samples to {out_path}")
 
 
 if __name__ == "__main__":
