@@ -149,6 +149,16 @@ max_batch_size = 32
 supported_languages = ["fr", "en"]
 
 
+[tts.depnorm_long]
+command = [
+    "uv", "run", "external_tts_dsm.py",
+    "--config=/home/vaclav/models/moshi/moshi_7dcb28fc_500/config.json",
+    "--moshi-weight=/home/vaclav/models/moshi/moshi_7dcb28fc_500/checkpoint.safetensors",
+]
+cwd = "external_tts/dsm"
+max_batch_size = 32
+supported_languages = ["fr", "en"]
+
 [dataset]
 # datasets = ["wikibooks_en", "wikibooks_fr"]
 datasets = ["wikibooks_15000_en", "wikibooks_15000_fr"]

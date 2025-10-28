@@ -3,10 +3,12 @@ name = "external_tts_moshi"
 version = "0.0.0"
 requires-python = ">= 3.11, < 3.14"
 dependencies = [
-    "moshi @ git+https://git@github.com/kyutai-labs/moshi.git#egg=moshi&subdirectory=moshi",
+    # "moshi @ git+https://git@github.com/kyutai-labs/moshi.git#egg=moshi&subdirectory=moshi",
+    "moshi",
     "external_tools",
     "setuptools",
 ]
 
 [tool.uv.sources]
 external_tools = { path = "../../external_tools", editable = true }
+moshi = { path = "/home/vaclav/prog/moshi/moshi", editable = true }

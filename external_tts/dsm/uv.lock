@@ -258,7 +258,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "external-tools", editable = "../../external_tools" },
-    { name = "moshi", git = "https://github.com/kyutai-labs/moshi.git?subdirectory=moshi" },
+    { name = "moshi", editable = "../../../moshi/moshi" },
     { name = "setuptools" },
 ]
 
@@ -471,8 +471,7 @@ wheels = [
 
 [[package]]
 name = "moshi"
-version = "0.2.12a2"
-source = { git = "https://github.com/kyutai-labs/moshi.git?subdirectory=moshi#e7894fa2a466bf6d82f9f1539f4d1a257ba86283" }
+source = { editable = "../../../moshi/moshi" }
 dependencies = [
     { name = "aiohttp" },
     { name = "bitsandbytes", marker = "sys_platform == 'linux'" },
@@ -486,6 +485,27 @@ dependencies = [
     { name = "sphn" },
     { name = "torch" },
 ]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiohttp", specifier = ">=3.10.5,<3.12" },
+    { name = "bitsandbytes", marker = "sys_platform == 'linux'", specifier = ">=0.45,<0.46" },
+    { name = "einops", specifier = ">=0.7,<0.9" },
+    { name = "flake8", marker = "extra == 'dev'" },
+    { name = "gradio-webrtc", marker = "extra == 'dev'", specifier = ">=0.0.18" },
+    { name = "huggingface-hub", specifier = ">=0.24,<0.34" },
+    { name = "numpy", specifier = ">=1.26,<2.3" },
+    { name = "pre-commit", marker = "extra == 'dev'" },
+    { name = "pyright", marker = "extra == 'dev'" },
+    { name = "pytest", specifier = ">=8.3.3" },
+    { name = "pytest", marker = "extra == 'dev'" },
+    { name = "safetensors", specifier = ">=0.4.0,<0.7" },
+    { name = "sentencepiece", specifier = "==0.2" },
+    { name = "sounddevice", specifier = "==0.5" },
+    { name = "sphn", specifier = ">=0.1.4,<0.2.0" },
+    { name = "torch", specifier = ">=2.2.0,<2.8" },
+]
+provides-extras = ["dev"]
 
 [[package]]
 name = "mpmath"
