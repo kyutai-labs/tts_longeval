@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from contextlib import ExitStack
 import logging
 import random
+import submitit
 import os
 import typing as tp
 
@@ -58,6 +59,13 @@ class MultiTasker:
     def run(self) -> None:
         if self.should_init_logging:
             init_logging(verbose=bool(os.environ.get('_TTS_LONGEVAL_VERBOSE')))
+        try:
+            env = submitit.JobEnvironment()
+        except RuntimeError:
+            pass
+        else:
+            local_rank = env.local_rank
+            os.environ['CUDA_VISIBLE_DEVICES'] = str(local_rank)
         random.shuffle(self.taskers)
         for tasker in self.taskers:
             tasker.run()

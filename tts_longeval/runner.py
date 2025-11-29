@@ -96,8 +96,8 @@ class Runner:
                 mem = conf.mem_per_gpu * gpus
                 kwargs['mem'] = f"{mem}GB"
             kwargs['gres'] = f'gpu:{gpus}'
-            kwargs['ntasks_per_node'] = 1
-            kwargs['cpus_per_task'] = gpus * conf.cpus_per_gpu
+            kwargs['ntasks_per_node'] = conf.gpus_per_task
+            kwargs['cpus_per_task'] = conf.cpus_per_gpu
             kwargs['partition'] = conf.partition
             kwargs['time'] = conf.time
         else:
