@@ -14,6 +14,7 @@ import torch
 
 from moshi.models.loaders import CheckpointInfo
 from moshi.models.tts import TTSModel, DEFAULT_DSM_TTS_REPO
+from external_tools.audio import audio_write
 from external_tools.speaker import hf_get
 
 
@@ -204,7 +205,11 @@ def main():
                     last_speaker = 0
                 segments.append((last_speaker, (last_segment_start, duration)))
 
-            sphn.write_wav(filename, wav.clamp(-0.99, 0.99).cpu().numpy(), mimi.sample_rate)
+            if filename.suffix == '.wav':
+                sphn.write_wav(filename, wav.clamp(-0.99, 0.99).cpu().numpy(), mimi.sample_rate)
+            else:
+                audio_write(filename, wav, mimi.sample_rate)
+
             save_file(debug_tensors, filename.with_suffix('.safetensors'))
             entries = all_entries[idx]
             debug_info = {
