@@ -18,6 +18,7 @@ class MainConfig(BaseModel):
     output_folder: Path
     debug: bool = False
     queue_addr: str = 'tcp://*:34873'
+    output_format: str = 'wav'
 
 
 class Config(BaseModel):

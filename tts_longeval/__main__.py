@@ -150,7 +150,7 @@ def main():
                         break
                 if missing_tag:
                     continue
-                output_file = this_output_folder / (sample.id + ".wav")
+                output_file = this_output_folder / (sample.id + f".{config.main.output_format}")
                 all_pairs.append((sample, output_file))
                 pairs_per_dataset_per_method[dataset][tts_name].append((sample, output_file))
                 pairs_per_method[tts_name].append((sample, output_file))
