@@ -93,7 +93,7 @@ class LoadableExternalTTS(LoadableTTS['ExternalTTS']):
 
     @property
     def id(self):
-        return self.id
+        return self._id
 
     @property
     def supported_languages(self) -> list[str]:
@@ -228,7 +228,7 @@ class LoadableElevenAPI(LoadableTTS['LoadableElevenAPI']):
 
     @property
     def id(self):
-        return self.id
+        return self._id
 
     @property
     def supported_languages(self) -> list[str]:
