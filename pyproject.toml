@@ -44,6 +44,7 @@ dev = [
     "pytest",
     "flake8",
     "pre-commit",
+    "ruff",
 ]
 
 [tool.setuptools.packages]
@@ -53,6 +54,12 @@ find = {namespaces = false}
 venvPath = "."
 venv = ".venv"
 exclude = [ "external_tts", "tts_longeval/normalizers/english.py", "tts_longeval/wavlm.py" ]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
 
 [tool.uv.sources]
 external_tools = { path = "./external_tools", editable = true }

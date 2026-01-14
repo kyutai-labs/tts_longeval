@@ -45,14 +45,14 @@ def main():
         assert len(batch) == 1
         item = batch[0]
 
-        num_speakers = len(item['speaker_audios'])
+        num_speakers = len(item["speaker_audios"])
 
         all_audios = []
         segments = []
-        start = 0.
+        start = 0.0
         sample_rate = 24000
 
-        turns = [(idx % num_speakers, turn) for idx, turn in enumerate(item['turns'])]
+        turns = [(idx % num_speakers, turn) for idx, turn in enumerate(item["turns"])]
         while turns:
             if num_speakers == 1:
                 if args.max_turns:
@@ -67,7 +67,7 @@ def main():
                 to_generate = " ".join(turn.strip() for _, turn in turns[:turns_to_generate])
                 turns = turns[turns_to_generate:]
                 print("Generating", to_generate)
-                audio_prompt_path = hf_get(item['speaker_audios'][speaker_index])
+                audio_prompt_path = hf_get(item["speaker_audios"][speaker_index])
                 try:
                     wav = model.generate(to_generate, audio_prompt_path=str(audio_prompt_path))
                 except ValueError:
@@ -83,11 +83,11 @@ def main():
 
         wav = torch.cat(all_audios, dim=-1)
         wav.clamp_(-0.99, 0.99)
-        output_file = Path(item['output_file'])
+        output_file = Path(item["output_file"])
         sphn.write_wav(output_file, wav.numpy(), sample_rate)
-        with open(output_file.with_suffix('.segments.json'), 'w') as f:
-            json.dump({'segments': segments}, f)
-        print("saved", item['output_file'])
+        with open(output_file.with_suffix(".segments.json"), "w") as f:
+            json.dump({"segments": segments}, f)
+        print("saved", item["output_file"])
         stdout.write("external_tts:" + json.dumps({"status": "ok"}) + "\n")
         stdout.flush()
 

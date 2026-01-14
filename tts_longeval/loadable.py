@@ -4,20 +4,19 @@
 """Simple protocol, a `Loadable` is something that can be loaded in a worker job, and is expected
 to take some time to do so, e.g. a model. The loadeded value should be `Closable`, e.g. have a close method.
 """
+
 from abc import ABC, abstractmethod
 import typing as tp
 
 
-L = tp.TypeVar('L', bound='Closable')
-R = tp.TypeVar('R')
+L = tp.TypeVar("L", bound="Closable")
+R = tp.TypeVar("R")
 
 
 class Closable(tp.Protocol):
-    def close(self) -> None:
-        ...
+    def close(self) -> None: ...
 
 
 class Loadable(ABC, tp.Generic[L]):
     @abstractmethod
-    def get(self) -> L:
-        ...
+    def get(self) -> L: ...

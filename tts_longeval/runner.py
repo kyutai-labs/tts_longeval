@@ -4,6 +4,7 @@
 """Code for the `Runner`, which runs jobs with GPUs, either locally
 or through SLURM.
 """
+
 from concurrent.futures import ThreadPoolExecutor, TimeoutError, Future
 from contextlib import ExitStack
 import logging
@@ -36,8 +37,9 @@ class SubmititConfig(BaseModel):
         cpus_per_gpu: number of CPUs per GPU.
         time: maximum job duration in minutes.
     """
+
     slurm: bool = True
-    partition: str = 'default'
+    partition: str = "default"
     max_gpus: int = 64
     gpus_per_task: int = 8
     mem_per_gpu: int | None = 50
@@ -53,10 +55,11 @@ class RunnerConfig(BaseModel):
         threads: number of local CPU threads, used only for calling API based TTS.
 
     """
+
     submitit: SubmititConfig
     threads: int = 4
 
-    def get(self, submitit_folder: Path, debug: bool) -> 'Runner':
+    def get(self, submitit_folder: Path, debug: bool) -> "Runner":
         return Runner(submitit_folder, self.submitit, self.threads, debug)
 
 
@@ -70,8 +73,15 @@ class Runner:
         debug: if True, will end if any of the jobs crashed.
         log_every: how often to print the number of jobs running and status.
     """
-    def __init__(self, submitit_folder: Path, submitit_config: SubmititConfig, threads: int = 4,
-                 debug: bool = False, log_every: float = 60.):
+
+    def __init__(
+        self,
+        submitit_folder: Path,
+        submitit_config: SubmititConfig,
+        threads: int = 4,
+        debug: bool = False,
+        log_every: float = 60.0,
+    ):
         self.submitit_config = submitit_config
         self.threads = threads
         self.debug = debug
@@ -82,9 +92,7 @@ class Runner:
         else:
             self.executor = submitit.LocalExecutor(folder=submitit_folder)
         self._update_executor_parameters()
-        self.executor.update_parameters(
-            job_name='tts_longeval_dispatcher',
-            stderr_to_stdout=True)
+        self.executor.update_parameters(job_name="tts_longeval_dispatcher", stderr_to_stdout=True)
         self.stack = ExitStack()
 
     def _update_executor_parameters(self):
@@ -94,15 +102,15 @@ class Runner:
         if conf.slurm:
             if conf.mem_per_gpu:
                 mem = conf.mem_per_gpu * gpus
-                kwargs['mem'] = f"{mem}GB"
-            kwargs['gres'] = f'gpu:{gpus}'
-            kwargs['ntasks_per_node'] = conf.gpus_per_task
-            kwargs['cpus_per_task'] = conf.cpus_per_gpu
-            kwargs['partition'] = conf.partition
-            kwargs['time'] = conf.time
+                kwargs["mem"] = f"{mem}GB"
+            kwargs["gres"] = f"gpu:{gpus}"
+            kwargs["ntasks_per_node"] = conf.gpus_per_task
+            kwargs["cpus_per_task"] = conf.cpus_per_gpu
+            kwargs["partition"] = conf.partition
+            kwargs["time"] = conf.time
         else:
-            kwargs['gpus_per_node'] = conf.gpus_per_task
-            kwargs['timeout_min'] = conf.time
+            kwargs["gpus_per_node"] = conf.gpus_per_task
+            kwargs["timeout_min"] = conf.time
         self.executor.update_parameters(**kwargs)
 
     def _run_gpu(self, multi_tasker_gpu: task.MultiTasker, cpu_jobs: list[Future]):
@@ -121,12 +129,12 @@ class Runner:
 
             for job in jobs:
                 stack.callback(job.cancel)
-            jobid = jobs[0].job_id.rsplit('_', 1)[0]
-            logger.info('Runner: job id: %s', jobid)
-            log = self.executor.folder / (jobs[0].job_id + '_0_log.out')
-            logger.info('Runner: first log: %s', log)
+            jobid = jobs[0].job_id.rsplit("_", 1)[0]
+            logger.info("Runner: job id: %s", jobid)
+            log = self.executor.folder / (jobs[0].job_id + "_0_log.out")
+            logger.info("Runner: first log: %s", log)
             if self.debug:
-                proc = sp.Popen(['tail', '-F', log])
+                proc = sp.Popen(["tail", "-F", log])
                 stack.callback(proc.terminate)
             known_failures = set()
             last_log_time = time.time()
@@ -137,9 +145,9 @@ class Runner:
                 failed = 0
                 for idx, job in enumerate(jobs):
                     if job.done():
-                        if job.state in ['RUNNING', 'PENDING']:
+                        if job.state in ["RUNNING", "PENDING"]:
                             continue
-                        elif job.state in ['COMPLETED', 'FINISHED']:
+                        elif job.state in ["COMPLETED", "FINISHED"]:
                             done += 1
                         else:
                             failed += 1
@@ -149,7 +157,7 @@ class Runner:
                                 if stdout is None:
                                     logger.error("Runner: no stdout for %s with state %s", jobid, job.state)
                                 else:
-                                    stdout = '\n'.join(stdout.split('\n')[-100:])
+                                    stdout = "\n".join(stdout.split("\n")[-100:])
                                     logger.error("Runner: stdout for %s with state %s:\n %s", jobid, job.state, stdout)
 
                 for cpu_job in cpu_jobs:
@@ -166,7 +174,7 @@ class Runner:
                     raise RuntimeError("One job failed.")
                 if done + failed == len(jobs):
                     break
-                time.sleep(10.)
+                time.sleep(10.0)
 
     def run(self, multi_tasker_gpu: task.MultiTasker, multi_tasker_cpu: task.MultiTasker):
         with self.pool:

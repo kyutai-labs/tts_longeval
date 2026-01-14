@@ -32,58 +32,67 @@ def any_is_prefix(name: str, prefixes: list[str]) -> bool:
 def main():
     parser = argparse.ArgumentParser(description="TTS Long Eval.")
     parser.add_argument(
-        "-c", "--config",
+        "-c",
+        "--config",
         type=Path,
         default="tts_longeval.toml",
         help="Path to the configuration file.",
     )
     parser.add_argument(
-        "-D", "--debug",
-        action='store_true',
+        "-D",
+        "--debug",
+        action="store_true",
         help="Debug mode, errors will be fatal, logs will be tailed.",
     )
     parser.add_argument(
-        "-g", "--gpus",
+        "-g",
+        "--gpus",
         type=int,
         help="Override the number of gpus.",
     )
     parser.add_argument(
-        "-t", "--threads",
+        "-t",
+        "--threads",
         type=int,
         help="Override the number of threads.",
     )
     parser.add_argument(
-        "-T", "--tags",
-        action='append',
+        "-T",
+        "--tags",
+        action="append",
         default=[],
         help="Required tags.",
     )
     parser.add_argument(
-        "-d", "--dataset",
+        "-d",
+        "--dataset",
         dest="datasets",
         type=str,
-        action='append',
+        action="append",
         help="Select a subset of datasets.",
     )
     parser.add_argument(
-        "-m", "--model",
+        "-m",
+        "--model",
         dest="models",
         type=str,
-        action='append',
+        action="append",
         help="Select a subset of models.",
     )
     parser.add_argument(
-        "-v", "--verbose",
-        action='store_true',
+        "-v",
+        "--verbose",
+        action="store_true",
         help="More verbose logging.",
     )
 
-    STAGES = ['gen', 'asr', 'spk', 'met']
+    STAGES = ["gen", "asr", "spk", "met"]
     parser.add_argument(
-        "-s", "--stages",
+        "-s",
+        "--stages",
         dest="stages",
         type=str,
-        action='append',
+        action="append",
         choices=STAGES,
         help="Select which steps to run. Repeat the flag to select multiples.",
     )
@@ -96,8 +105,8 @@ def main():
     args = parser.parse_args()
     init_logging(args.verbose)
     if args.verbose:
-        os.environ['_TTS_LONGEVAL_VERBOSE'] = '1'
-    raw = tomllib.load(args.config.open('rb'))
+        os.environ["_TTS_LONGEVAL_VERBOSE"] = "1"
+    raw = tomllib.load(args.config.open("rb"))
     config = Config.model_validate(raw)
     if args.gpus is not None:
         config.runner.submitit.max_gpus = args.gpus
@@ -108,9 +117,9 @@ def main():
     if not args.stages:
         args.stages = STAGES
 
-    queue_root = config.main.output_folder / 'queues'
+    queue_root = config.main.output_folder / "queues"
     queue_root.mkdir(exist_ok=True, parents=True)
-    output_folder = config.main.output_folder / 'outputs'
+    output_folder = config.main.output_folder / "outputs"
     output_folder.mkdir(exist_ok=True, parents=True)
 
     tts_models: dict[str, LoadableTTS] = {}
@@ -156,14 +165,14 @@ def main():
                 pairs_per_method[tts_name].append((sample, output_file))
 
     with ZMQueue(pull_address=config.main.queue_addr) as zmqueue:
-        if 'gen' in args.stages:
+        if "gen" in args.stages:
             gpu_taskers = []
             cpu_taskers = []
             for name, tts_model in tts_models.items():
                 this_pairs = pairs_per_method[name]
                 kept_pairs = []
                 for sample, file in this_pairs:
-                    if file.with_suffix('.done').exists():
+                    if file.with_suffix(".done").exists():
                         continue
                     kept_pairs.append((sample, file))
                 if not kept_pairs:
@@ -179,12 +188,10 @@ def main():
                 else:
                     gpu_taskers.append(tasker)
             if gpu_taskers or cpu_taskers:
-                runner = config.runner.get(config.main.output_folder / 'submitit', config.main.debug)
+                runner = config.runner.get(config.main.output_folder / "submitit", config.main.debug)
                 runner.run(MultiTasker(gpu_taskers), MultiTasker(cpu_taskers, should_init_logging=False))
-        if 'asr' in args.stages:
-            all_pairs_for_asr = [
-                pair for pair in all_pairs if not pair[1].with_suffix('.asr.json').exists()
-            ]
+        if "asr" in args.stages:
+            all_pairs_for_asr = [pair for pair in all_pairs if not pair[1].with_suffix(".asr.json").exists()]
             if all_pairs_for_asr:
                 logger.info(f"All samples are generated, will now transcribe {len(all_pairs_for_asr)} files.")
                 asr_model = config.asr.get()
@@ -194,13 +201,11 @@ def main():
                     for pair in all_pairs_for_asr:
                         if pair[1].exists():
                             pusher.push(pair)
-                runner = config.runner.get(config.main.output_folder / 'submitit', config.main.debug)
+                runner = config.runner.get(config.main.output_folder / "submitit", config.main.debug)
                 runner.run(MultiTasker([tasker]), MultiTasker([]))
                 logger.info("All transcript are in.")
-        if 'spk' in args.stages:
-            all_pairs_for_spk = [
-                pair for pair in all_pairs if not pair[1].with_suffix('.speaker.json').exists()
-            ]
+        if "spk" in args.stages:
+            all_pairs_for_spk = [pair for pair in all_pairs if not pair[1].with_suffix(".speaker.json").exists()]
             if all_pairs_for_spk:
                 logger.info(f"Will compute speaker similarity over {len(all_pairs_for_spk)} files.")
                 queue = zmqueue.new_queue("__spk")
@@ -209,11 +214,11 @@ def main():
                     for pair in all_pairs_for_spk:
                         if pair[1].exists():
                             pusher.push(pair)
-                runner = config.runner.get(config.main.output_folder / 'submitit', config.main.debug)
+                runner = config.runner.get(config.main.output_folder / "submitit", config.main.debug)
                 runner.run(MultiTasker([tasker]), MultiTasker([]))
                 logger.info("All speaker sims are in.")
 
-    if 'met' in args.stages:
+    if "met" in args.stages:
         with config.metrics.get_pool() as pool:
             all_metrics = {}
             for dataset, pairs_per_method in pairs_per_dataset_per_method.items():
@@ -221,10 +226,10 @@ def main():
                 print(f"Results for dataset: {dataset}")
                 lines = print_results_for_dataset(pool, config.metrics, pairs_per_method)
                 all_metrics[dataset] = lines
-                print('\n' + '-' * 64 + '\n')
+                print("\n" + "-" * 64 + "\n")
             if args.save_metrics is not None:
                 args.save_metrics.write_text(json.dumps(all_metrics))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -2,6 +2,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 """Configuration, aggregation, and display of the metrics."""
+
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
 import logging
@@ -30,11 +31,12 @@ class MetricsConfig(BaseModel):
             if the primary method failed. Not really tested.
         normalizer: text normalizer for the WER.
 
-        """
+    """
+
     workers: int = 1
-    quantiles: list[float] = Field(default_factory=lambda: [0.25, 0.5, 0.75, 1.])
+    quantiles: list[float] = Field(default_factory=lambda: [0.25, 0.5, 0.75, 1.0])
     fallbacks: dict[str, list[str]] = {}
-    normalizer: str = 'whisper'
+    normalizer: str = "whisper"
 
     def get_pool(self) -> ProcessPoolExecutor:
         return ProcessPoolExecutor(self.workers)
@@ -50,12 +52,12 @@ def collect_metrics(config: MetricsConfig, sample: Sample, files: list[Path]) ->
             wers = get_wers(sample, file, config.quantiles, normalizer)
             if wers is None:
                 wers = {}
-            metrics['wers'] = wers
+            metrics["wers"] = wers
 
             speaker_sims = get_speaker_sims(file, config.quantiles)
             if speaker_sims is None:
                 speaker_sims = {}
-            metrics['spks'] = speaker_sims
+            metrics["spks"] = speaker_sims
         except Exception:
             logger.error("Error while loading metrics for file %s", file)
             raise
@@ -80,10 +82,8 @@ def average(all_metrics: list[dict[str, dict[str, float]]]) -> dict[str, dict[st
 
 
 def collect_results_for_dataset(
-        pool: ProcessPoolExecutor,
-        config: MetricsConfig,
-        pairs_per_method: dict[str, list[tuple[Sample, Path]]]) -> dict[str, dict[str, dict[str, float]]]:
-
+    pool: ProcessPoolExecutor, config: MetricsConfig, pairs_per_method: dict[str, list[tuple[Sample, Path]]]
+) -> dict[str, dict[str, dict[str, float]]]:
     samples = {}
     ignored_methods = set()
     for fallbacks in config.fallbacks.values():
@@ -121,21 +121,20 @@ def collect_results_for_dataset(
 
 
 def print_results_for_dataset(
-        pool: ProcessPoolExecutor,
-        config: MetricsConfig,
-        pairs_per_method: dict[str, list[tuple[Sample, Path]]]) -> list[dict]:
+    pool: ProcessPoolExecutor, config: MetricsConfig, pairs_per_method: dict[str, list[tuple[Sample, Path]]]
+) -> list[dict]:
     results = collect_results_for_dataset(pool, config, pairs_per_method)
     lines: list[dict[str, tp.Any]] = []
 
     metrics_per_section = defaultdict(dict)
     for name, result in results.items():
         line = {}
-        line['method'] = name
+        line["method"] = name
         line.update(result)
         for section, metrics in result.items():
             metrics_per_section[section].update(metrics)
         lines.append(line)
-    lines.sort(key=lambda x: x['method'])
+    lines.sort(key=lambda x: x["method"])
 
     groups = [
         tt.leaf("method", align="<"),
@@ -143,9 +142,7 @@ def print_results_for_dataset(
     for section, metrics in metrics_per_section.items():
         leafs = []
         for name in sorted(metrics):
-            percent_prefixes = [
-                "wer", "w_", "sim", "s_", "nn", "n_"
-            ]
+            percent_prefixes = ["wer", "w_", "sim", "s_", "nn", "n_"]
             fmt = ".3f"
             for prefix in percent_prefixes:
                 if name.startswith(prefix):

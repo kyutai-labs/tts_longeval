@@ -15,7 +15,6 @@ WAVLM_SPEAKER_SIM_PATH = Path("./models/wavlm_large_finetune.pth")
 
 
 class Res2Conv1dReluBn(nn.Module):
-
     def __init__(self, channels, kernel_size=1, stride=1, padding=0, dilation=1, bias=True, scale=4):
         super().__init__()
         assert channels % scale == 0, "{} % {} != 0".format(channels, scale)

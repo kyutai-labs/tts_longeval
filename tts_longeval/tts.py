@@ -5,6 +5,7 @@
 (Elevenlabs) or subprocess based, using a protocol to feed it the script to generate.
 This allows a good isolation of the dependencies between TTS engines, otherwise, it would
 be a complete hell to support all of them in a single codebase."""
+
 from abc import ABC, abstractmethod
 from functools import cache
 import json
@@ -26,41 +27,36 @@ from .loadable import Loadable
 from .task import BatchedTask
 
 
-TTS = tp.TypeVar('TTS', bound='BaseTTS')
+TTS = tp.TypeVar("TTS", bound="BaseTTS")
 logger = logging.getLogger(__name__)
 
 
 class LoadableTTS(Loadable[TTS]):
     @property
     @abstractmethod
-    def is_api(self) -> bool:
-        ...
+    def is_api(self) -> bool: ...
 
     @property
     @abstractmethod
-    def max_batch_size(self) -> int:
-        ...
+    def max_batch_size(self) -> int: ...
 
     @property
     @abstractmethod
-    def supported_languages(self) -> list[str]:
-        ...
+    def supported_languages(self) -> list[str]: ...
 
     @property
     @abstractmethod
-    def need_tags(self) -> list[str]:
-        ...
+    def need_tags(self) -> list[str]: ...
 
 
 class BaseTTS(ABC):
-    def generate_batch(self, samples: list[Sample], output_files: list[Path]) -> None:
-        ...
+    def generate_batch(self, samples: list[Sample], output_files: list[Path]) -> None: ...
 
     def close(self) -> None:
         pass
 
 
-class LoadableExternalTTS(LoadableTTS['ExternalTTS']):
+class LoadableExternalTTS(LoadableTTS["ExternalTTS"]):
     """An external TTS, running in a subprocess following the prococol.
 
     Args:
@@ -73,8 +69,17 @@ class LoadableExternalTTS(LoadableTTS['ExternalTTS']):
         need_tags: set of tags that a data sample must have to be processed. This is used for
             instance to indicate TTS that can only support single speaker samples.
     """
-    def __init__(self, id: str, command: list[str], cwd: Path, is_api: bool, max_batch_size: int,
-                 supported_languages: list[str], need_tags: list[str]):
+
+    def __init__(
+        self,
+        id: str,
+        command: list[str],
+        cwd: Path,
+        is_api: bool,
+        max_batch_size: int,
+        supported_languages: list[str],
+        need_tags: list[str],
+    ):
         self.command = command
         self.cwd = cwd
         self._id = id
@@ -103,7 +108,7 @@ class LoadableExternalTTS(LoadableTTS['ExternalTTS']):
     def need_tags(self) -> list[str]:
         return self._need_tags
 
-    def get(self) -> 'ExternalTTS':
+    def get(self) -> "ExternalTTS":
         return ExternalTTS(self.command, self.cwd)
 
 
@@ -115,6 +120,7 @@ class ExternalTTS(BaseTTS):
         JSONL reply indicating the status of the generation. Any other output line without this prefix
         is just printed out.
     """
+
     def __init__(self, command: list[str], cwd: Path):
         self._proc = sp.Popen(command, stdin=sp.PIPE, stdout=sp.PIPE, cwd=cwd, text=True, bufsize=1)
 
@@ -127,11 +133,11 @@ class ExternalTTS(BaseTTS):
         batch = []
         for sample, output_file in zip(samples, output_files):
             item = {
-                'turns': sample.turns,
-                'speaker_audios': sample.speaker_audios,
-                'language': sample.language,
-                'output_file': str(output_file.absolute()),
-                'extra': sample.model_extra,
+                "turns": sample.turns,
+                "speaker_audios": sample.speaker_audios,
+                "language": sample.language,
+                "output_file": str(output_file.absolute()),
+                "extra": sample.model_extra,
             }
             batch.append(item)
         batch_json = json.dumps(batch)
@@ -140,18 +146,18 @@ class ExternalTTS(BaseTTS):
         assert self._proc.stdin is not None
         assert self._proc.stdout is not None
         self._proc.stdin.write(batch_json)
-        self._proc.stdin.write('\n')
+        self._proc.stdin.write("\n")
         if self._proc.poll() is not None:
             raise RuntimeError(f"Process has exited with code {self._proc.returncode}")
         while True:
             line = self._proc.stdout.readline()
             if self._proc.poll() is not None:
                 raise RuntimeError(f"Process has exited with code {self._proc.returncode}")
-            if line.startswith('external_tts:'):
-                result = json.loads(line.split(':', 1)[1])
-                if result['status'] == 'failed':
+            if line.startswith("external_tts:"):
+                result = json.loads(line.split(":", 1)[1])
+                if result["status"] == "failed":
                     raise RuntimeError("Generation failed.")
-                assert result['status'] == 'ok'
+                assert result["status"] == "ok"
                 break
             else:
                 print(line)
@@ -159,19 +165,21 @@ class ExternalTTS(BaseTTS):
 
 class ExternalTTSConfig(BaseModel):
     """See `LoadableExternalTTS`."""
+
     command: list[str]
     cwd: Path
     is_api: bool = False
     max_batch_size: int = 1
     active: bool = True
-    supported_languages: list[str] = ['en']
+    supported_languages: list[str] = ["en"]
     need_tags: list[str] = []
 
     def get(self, id: str) -> LoadableExternalTTS | None:
         if not self.active:
             return None
-        return LoadableExternalTTS(id, self.command, self.cwd, self.is_api, self.max_batch_size,
-                                   self.supported_languages, self.need_tags)
+        return LoadableExternalTTS(
+            id, self.command, self.cwd, self.is_api, self.max_batch_size, self.supported_languages, self.need_tags
+        )
 
 
 class TTSTask(BatchedTask[TTS, tuple[Sample, Path]]):
@@ -185,7 +193,7 @@ class TTSTask(BatchedTask[TTS, tuple[Sample, Path]]):
         try:
             loaded.generate_batch(samples, output_files)
         except Exception as exc:
-            sample_ids = ', '.join(x.id for x in samples)
+            sample_ids = ", ".join(x.id for x in samples)
             logger.error(f"Error generating batch with model {loaded.__class__}, samples {sample_ids}: {exc}")
             if self.debug:
                 raise
@@ -193,18 +201,18 @@ class TTSTask(BatchedTask[TTS, tuple[Sample, Path]]):
             end = time.time()
             duration = (end - begin) / len(samples)
             for output_file in output_files:
-                info = {
-                    'duration': duration
-                }
-                output_file.with_suffix('.done').write_text(json.dumps(info))
+                info = {"duration": duration}
+                output_file.with_suffix(".done").write_text(json.dumps(info))
 
 
-class LoadableElevenAPI(LoadableTTS['LoadableElevenAPI']):
+class LoadableElevenAPI(LoadableTTS["LoadableElevenAPI"]):
     """An API based TTS, using ElevenLabs. Note that we will look for a voice with the
     last part of the speaker audio filename in the available voices."""
+
     def __init__(self, id: str, model_id: str, supported_languages: list[str], need_tags: list[str]):
         from elevenlabs.client import ElevenLabs
-        api_key = os.environ['ELEVENLAB_API_KEY']
+
+        api_key = os.environ["ELEVENLAB_API_KEY"]
         self.client = ElevenLabs(api_key=api_key)
 
         self.model_id = model_id
@@ -215,7 +223,7 @@ class LoadableElevenAPI(LoadableTTS['LoadableElevenAPI']):
     def close(self):
         pass
 
-    def get(self) -> 'LoadableElevenAPI':
+    def get(self) -> "LoadableElevenAPI":
         return self
 
     @property
@@ -276,7 +284,7 @@ class LoadableElevenAPI(LoadableTTS['LoadableElevenAPI']):
         segments = []
         out_sample_rate = None
         if len(sample.speaker_audios) == 1:
-            voice_name = sample.speaker_audios[0].rsplit('/', 1)[-1]
+            voice_name = sample.speaker_audios[0].rsplit("/", 1)[-1]
             text = " ".join(sample.turns)
             wav, out_sample_rate = self._gen_one(voice_name, text)
             all_segments.append(wav)
@@ -284,7 +292,7 @@ class LoadableElevenAPI(LoadableTTS['LoadableElevenAPI']):
             start = 0
             for idx, turn in enumerate(sample.turns):
                 speaker_idx = idx % len(sample.speaker_audios)
-                voice_name = sample.speaker_audios[speaker_idx].rsplit('/', 1)[-1]
+                voice_name = sample.speaker_audios[speaker_idx].rsplit("/", 1)[-1]
                 wav, sr = self._gen_one(voice_name, turn)
                 if out_sample_rate is None:
                     out_sample_rate = sr
@@ -299,15 +307,15 @@ class LoadableElevenAPI(LoadableTTS['LoadableElevenAPI']):
         wav.clamp_(-0.99, 0.999)
         sphn.write_wav(output_files[0], wav.numpy(), out_sample_rate)
         if segments:
-            with open(output_files[0].with_suffix('.segments.json'), 'w') as f:
-                json.dump({'segments': segments}, f)
-        output_files[0].with_suffix('.done').touch()
+            with open(output_files[0].with_suffix(".segments.json"), "w") as f:
+                json.dump({"segments": segments}, f)
+        output_files[0].with_suffix(".done").touch()
 
 
 class ElevenAPIConfig(BaseModel):
     model_id: str
     active: bool = True
-    supported_languages: list[str] = ['en', 'fr']
+    supported_languages: list[str] = ["en", "fr"]
     need_tags: list[str] = []
 
     def get(self, id: str) -> LoadableElevenAPI | None:
