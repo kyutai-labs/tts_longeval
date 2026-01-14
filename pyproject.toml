@@ -58,6 +58,9 @@ exclude = [ "external_tts", "tts_longeval/normalizers/english.py", "tts_longeval
 [tool.ruff]
 line-length = 120
 
+[tool.ruff.lint]
+select = ["I"]  # isort
+
 [tool.ruff.format]
 quote-style = "double"
 

@@ -3,13 +3,12 @@
 # LICENSE file in the root directory of this source tree.
 """Utilities."""
 
-from contextlib import contextmanager
 import logging
 import os
-from pathlib import Path
-import typing as tp
 import sys
-
+import typing as tp
+from contextlib import contextmanager
+from pathlib import Path
 
 T = tp.TypeVar("T")
 

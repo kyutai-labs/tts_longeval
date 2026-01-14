@@ -6,13 +6,13 @@
 
 import argparse
 from pathlib import Path
-import sphn
 
+import julius.resample
+import sphn
+import torch
 from audioseal import AudioSeal
 from huggingface_hub import hf_hub_download
-import julius.resample
 from moshi.models import loaders
-import torch
 
 
 def main():

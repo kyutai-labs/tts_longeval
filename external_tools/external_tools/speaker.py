@@ -3,9 +3,9 @@
 # LICENSE file in the root directory of this source tree.
 from pathlib import Path
 
-from huggingface_hub import hf_hub_download
 import sphn
 import torch
+from huggingface_hub import hf_hub_download
 
 from .audio import Smoother
 

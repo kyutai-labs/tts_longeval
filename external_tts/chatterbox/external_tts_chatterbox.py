@@ -3,14 +3,13 @@
 # LICENSE file in the root directory of this source tree.
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from chatterbox.tts import ChatterboxTTS
-from chatterbox.models.t3.modules import learned_pos_emb
 import sphn
 import torch
-
+from chatterbox.models.t3.modules import learned_pos_emb
+from chatterbox.tts import ChatterboxTTS
 from external_tools.speaker import Smoother, hf_get
 
 

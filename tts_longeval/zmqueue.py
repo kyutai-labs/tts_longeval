@@ -4,19 +4,18 @@
 """A ZeroMQ based job queue, with the goal of having no external dependency, e.g. redis.
 Not the most robust, but in case something get stucks, one can always restart the whole command."""
 
-from collections import deque
-from dataclasses import dataclass, field
-from contextlib import ExitStack
 import logging
 import pickle
 import socket
 import threading
 import time
 import typing as tp
+from collections import deque
+from contextlib import ExitStack
+from dataclasses import dataclass, field
 
-from pydantic import BaseModel
 import zmq
-
+from pydantic import BaseModel
 
 A = tp.TypeVar("A")
 logger = logging.getLogger(__name__)

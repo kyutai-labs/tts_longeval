@@ -4,16 +4,15 @@
 "Wrapper around DIA https://github.com/nari-labs/dia."
 
 import argparse
-from collections import deque
 import json
-from pathlib import Path
 import sys
 import traceback
+from collections import deque
+from pathlib import Path
 
 import sphn
 import torch
-
-from external_tools.speaker import get_speaker_audio, Smoother
+from external_tools.speaker import Smoother, get_speaker_audio
 
 
 def build_audio_text(
@@ -64,7 +63,7 @@ def build_audio_text(
 
 def main():
     sys.path.insert(1, "./dia")
-    from dia.model import Dia, DEFAULT_SAMPLE_RATE  # type: ignore
+    from dia.model import DEFAULT_SAMPLE_RATE, Dia  # type: ignore
 
     stdout = sys.stdout
     sys.stdout = sys.stderr

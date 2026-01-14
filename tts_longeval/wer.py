@@ -3,18 +3,17 @@
 # LICENSE file in the root directory of this source tree.
 """WER metric."""
 
-from collections import defaultdict
-from functools import cache, partial
 import logging
-from pathlib import Path
 import string
 import typing as tp
+from collections import defaultdict
+from functools import cache, partial
+from pathlib import Path
 
 import jiwer
 
 from .data import Sample
 from .normalizers import BasicTextNormalizer, EnglishTextNormalizer, FrenchNormalizer
-
 
 logger = logging.getLogger(__name__)
 

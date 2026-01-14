@@ -9,15 +9,14 @@
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from snac import SNAC  # type: ignore
 import sphn
-from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
 import torch
-
-from external_tools.speaker import get_speaker_audio, Smoother
+from external_tools.speaker import Smoother, get_speaker_audio
+from snac import SNAC  # type: ignore
+from transformers import AutoModelForCausalLM, AutoTokenizer  # type: ignore
 
 
 def load_models():

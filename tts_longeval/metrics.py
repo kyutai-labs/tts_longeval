@@ -3,19 +3,18 @@
 # LICENSE file in the root directory of this source tree.
 """Configuration, aggregation, and display of the metrics."""
 
+import logging
+import typing as tp
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
-import logging
 from pathlib import Path
-import typing as tp
 
-from pydantic import BaseModel, Field
 import treetable as tt
+from pydantic import BaseModel, Field
 
 from .data import Sample
-from .wer import get_wers, get_normalizer
 from .speakersim import get_speaker_sims
-
+from .wer import get_normalizer, get_wers
 
 logger = logging.getLogger(__name__)
 

@@ -5,19 +5,18 @@
 or through SLURM.
 """
 
-from concurrent.futures import ThreadPoolExecutor, TimeoutError, Future
-from contextlib import ExitStack
 import logging
 import math
-from pathlib import Path
 import subprocess as sp
 import time
+from concurrent.futures import Future, ThreadPoolExecutor, TimeoutError
+from contextlib import ExitStack
+from pathlib import Path
 
-from pydantic import BaseModel
 import submitit
+from pydantic import BaseModel
 
 from . import task
-
 
 logger = logging.getLogger(__name__)
 

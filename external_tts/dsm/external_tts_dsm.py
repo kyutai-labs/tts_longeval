@@ -1,21 +1,20 @@
 # Copyright (c) Kyutai, all rights reserved.
 
 import argparse
-from dataclasses import dataclass
 import json
-from pathlib import Path
 import sys
 import time
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
-from safetensors.torch import save_file
 import sphn
 import torch
-
-from moshi.models.loaders import CheckpointInfo
-from moshi.models.tts import TTSModel, DEFAULT_DSM_TTS_REPO
 from external_tools.audio import audio_write
 from external_tools.speaker import hf_get
+from moshi.models.loaders import CheckpointInfo
+from moshi.models.tts import DEFAULT_DSM_TTS_REPO, TTSModel
+from safetensors.torch import save_file
 
 
 @dataclass

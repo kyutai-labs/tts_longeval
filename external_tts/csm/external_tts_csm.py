@@ -7,14 +7,14 @@
 """Wrapper around CSM from SesameAI."""
 
 import argparse
-import sys
 import json
-from pathlib import Path
 import os
+import sys
+from pathlib import Path
+
 import torch
 import torchaudio  # type: ignore
-
-from external_tools.speaker import get_speaker_audio, Smoother
+from external_tools.speaker import Smoother, get_speaker_audio
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
     # Disable Triton compilation
     os.environ["NO_TORCH_COMPILE"] = "1"
 
-    from generator import load_csm_1b, Segment  # type: ignore
+    from generator import Segment, load_csm_1b  # type: ignore
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--single-mode", choices=["double", "default"], default="default")

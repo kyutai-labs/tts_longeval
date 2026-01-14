@@ -3,22 +3,21 @@
 # LICENSE file in the root directory of this source tree.
 """Definition of the ASR models and tasks used to compute the WER."""
 
-from abc import abstractmethod, ABC
-import logging
-from pathlib import Path
 import json
+import logging
 import typing as tp
+from abc import ABC, abstractmethod
+from pathlib import Path
 
-from pydantic import BaseModel
 import sphn
 import torch
+from pydantic import BaseModel
 from transformers import pipeline  # type: ignore
 
 from .data import Sample
 from .loadable import Loadable
 from .task import BatchedTask
 from .utils import write_and_rename
-
 
 logger = logging.Logger(__name__)
 ASR = tp.TypeVar("ASR", bound="BaseASR")

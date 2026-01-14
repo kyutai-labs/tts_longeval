@@ -5,16 +5,15 @@
 
 import argparse
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import sphn
 import torch
-
-from moshi.models.loaders import CheckpointInfo
-from moshi.models.tts import TTSModel, DEFAULT_DSM_TTS_REPO
 from external_tools.audio import Smoother
 from external_tools.speaker import hf_get
+from moshi.models.loaders import CheckpointInfo
+from moshi.models.tts import DEFAULT_DSM_TTS_REPO, TTSModel
 
 
 @torch.no_grad()

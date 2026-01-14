@@ -5,18 +5,18 @@
 a `Loadable`, and applies it so some number of items.
 """
 
+import logging
+import os
+import random
+import typing as tp
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
-import logging
-import random
+
 import submitit
-import os
-import typing as tp
 
-from .loadable import Loadable, L
-from .zmqueue import Queue, A
+from .loadable import L, Loadable
 from .utils import init_logging
-
+from .zmqueue import A, Queue
 
 logger = logging.getLogger(__name__)
 

@@ -2,22 +2,21 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 import argparse
-from collections import defaultdict
 import json
 import logging
 import os
-from pathlib import Path
 import tomllib
+from collections import defaultdict
+from pathlib import Path
 
 from tts_longeval.asr import ASRTask
 from tts_longeval.config import Config
 from tts_longeval.metrics import print_results_for_dataset
-from tts_longeval.task import Tasker, MultiTasker
-from tts_longeval.zmqueue import ZMQueue
 from tts_longeval.speakersim import SpeakerSimilarityTask
-from tts_longeval.tts import TTSTask, LoadableTTS
+from tts_longeval.task import MultiTasker, Tasker
+from tts_longeval.tts import LoadableTTS, TTSTask
 from tts_longeval.utils import init_logging
-
+from tts_longeval.zmqueue import ZMQueue
 
 logger = logging.getLogger(__name__)
 

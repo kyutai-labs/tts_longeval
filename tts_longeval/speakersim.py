@@ -3,21 +3,20 @@
 # LICENSE file in the root directory of this source tree.
 """Speaker similarity metric."""
 
+import json
 import logging
 from pathlib import Path
-import json
 
-from pydantic import BaseModel
 import sphn
 import torch
+from external_tools.speaker import hf_get
+from pydantic import BaseModel
 
 from .data import Sample
 from .loadable import Loadable
 from .task import BatchedTask
 from .utils import write_and_rename
-from .wavlm import load_wavlm_speaker_model, WAVLM_SPEAKER_SIM_PATH
-from external_tools.speaker import hf_get
-
+from .wavlm import WAVLM_SPEAKER_SIM_PATH, load_wavlm_speaker_model
 
 logger = logging.getLogger(__name__)
 

@@ -12,7 +12,7 @@ from .data import DatasetConfig
 from .metrics import MetricsConfig
 from .runner import RunnerConfig
 from .speakersim import SpeakerSimilarityConfig
-from .tts import ExternalTTSConfig, ElevenAPIConfig
+from .tts import ElevenAPIConfig, ExternalTTSConfig
 
 
 class MainConfig(BaseModel):

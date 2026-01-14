@@ -8,7 +8,7 @@ with `parsy`, which makes it quite nice and compact to declare new substitution 
 import re
 from pathlib import Path
 
-from parsy import regex, seq, success, whitespace, ParseError
+from parsy import ParseError, regex, seq, success, whitespace
 
 from .basic import remove_symbols_and_diacritics
 

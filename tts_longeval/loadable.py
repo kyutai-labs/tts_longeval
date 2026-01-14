@@ -5,9 +5,8 @@
 to take some time to do so, e.g. a model. The loadeded value should be `Closable`, e.g. have a close method.
 """
 
-from abc import ABC, abstractmethod
 import typing as tp
-
+from abc import ABC, abstractmethod
 
 L = tp.TypeVar("L", bound="Closable")
 R = tp.TypeVar("R")
