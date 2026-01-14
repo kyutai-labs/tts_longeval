@@ -2,6 +2,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 """Utilities."""
+
 from contextlib import contextmanager
 import logging
 import os
@@ -10,7 +11,7 @@ import typing as tp
 import sys
 
 
-T = tp.TypeVar('T')
+T = tp.TypeVar("T")
 
 
 def get_root() -> Path:
@@ -34,7 +35,9 @@ def write_and_rename(path: Path, mode: str = "wb", suffix: str = ".tmp"):
 
 def init_logging(verbose: bool = False):
     logging.basicConfig(
-        stream=sys.stderr, level=logging.DEBUG if verbose else logging.INFO,
-        format='[%(asctime)s][%(name)s][%(levelname)s] - %(message)s',
+        stream=sys.stderr,
+        level=logging.DEBUG if verbose else logging.INFO,
+        format="[%(asctime)s][%(name)s][%(levelname)s] - %(message)s",
         datefmt="%m-%d %H:%M:%S",
-        force=True)
+        force=True,
+    )

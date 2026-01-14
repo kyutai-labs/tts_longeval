@@ -4,6 +4,7 @@
 """A task is something that requires something heavy to load,
 a `Loadable`, and applies it so some number of items.
 """
+
 from abc import ABC, abstractmethod
 from contextlib import ExitStack
 import logging
@@ -22,14 +23,14 @@ logger = logging.getLogger(__name__)
 
 class BatchedTask(ABC, tp.Generic[L, A]):
     @abstractmethod
-    def __call__(self, loaded: L, args: list[A]) -> None:
-        ...
+    def __call__(self, loaded: L, args: list[A]) -> None: ...
 
 
 class Tasker(tp.Generic[L, A]):
     """Applies a task, ensuring that `loadable` is loaded only once,
     and its resources are closed at the end. The task items are popped from
     `queue`."""
+
     def __init__(self, max_batch_size: int, task: BatchedTask[L, A], loadable: Loadable[L], queue: Queue[A]):
         self.max_batch_size = max_batch_size
         self.task = task
@@ -58,14 +59,14 @@ class MultiTasker:
 
     def run(self) -> None:
         if self.should_init_logging:
-            init_logging(verbose=bool(os.environ.get('_TTS_LONGEVAL_VERBOSE')))
+            init_logging(verbose=bool(os.environ.get("_TTS_LONGEVAL_VERBOSE")))
         try:
             env = submitit.JobEnvironment()
         except RuntimeError:
             pass
         else:
             local_rank = env.local_rank
-            os.environ['CUDA_VISIBLE_DEVICES'] = str(local_rank)
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(local_rank)
         random.shuffle(self.taskers)
         for tasker in self.taskers:
             tasker.run()

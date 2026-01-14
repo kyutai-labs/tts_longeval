@@ -4,6 +4,7 @@
 """Our own tentative at making a French normalizer, in particular for numbers. Not heavily
 tested and not as complete as the one for English developed by OpenAI. We use parser combinators
 with `parsy`, which makes it quite nice and compact to declare new substitution rules."""
+
 import re
 from pathlib import Path
 
@@ -14,7 +15,7 @@ from .basic import remove_symbols_and_diacritics
 
 def word(reg: str):
     """Parser parsing a regex with a word boundary at the end (boundary not consumed)."""
-    return regex(f'(?:{reg})' + r'\b')
+    return regex(f"(?:{reg})" + r"\b")
 
 
 def get_number_parser():
@@ -26,11 +27,11 @@ def get_number_parser():
     """
     mapping_path = Path(__file__).parent / "french_numbers.tsv"
     mapping = {}
-    for line in mapping_path.read_text().split('\n'):
+    for line in mapping_path.read_text().split("\n"):
         line = line.strip()
         if not line:
             continue
-        num, txt = line.strip().split('\t')
+        num, txt = line.strip().split("\t")
         mapping[txt] = int(num)
 
     keys = list(mapping.keys())
@@ -58,7 +59,7 @@ def get_number_parser():
     milliard = word(r"milliards?").result(1_000_000_000)
     up_to_milliard = multiplier(milliard, up_to_million)
 
-    number = up_to_milliard.map(lambda x: 'un' if x == 1 else str(x))
+    number = up_to_milliard.map(lambda x: "un" if x == 1 else str(x))
 
     euro = word("euros?").result("€")
     dollar = word("dollars?").result("$")
@@ -73,13 +74,11 @@ def get_number_parser():
             if x[1][1] == 0:
                 return x[0] + x[1][0]
             else:
-                return f'{x[0]},{x[1][1]:02d}{x[1][0]}'
+                return f"{x[0]},{x[1][1]:02d}{x[1][0]}"
 
-    number_or_money = seq(
-        number,
-        seq(ws + (euro | dollar | pound), centimes_part).optional()).map(_map_number_money)
-    joker = regex(r'\w+')
-    sep = regex(r'\W+')
+    number_or_money = seq(number, seq(ws + (euro | dollar | pound), centimes_part).optional()).map(_map_number_money)
+    joker = regex(r"\w+")
+    sep = regex(r"\W+")
     chunk = number_or_money | joker
     body = sep + chunk
     doc = (body | chunk) + body.many().concat()
@@ -107,7 +106,7 @@ class FrenchNormalizer:
         except ParseError as exc:
             index = exc.index
             start = max(0, index - 10)
-            print("Original text:", s, s[start: start + 100])
+            print("Original text:", s, s[start : start + 100])
             raise
         s = remove_symbols_and_diacritics(s, keep=",")  # keep numeric symbols
         s = re.sub(r"\s+", " ", s)
@@ -126,5 +125,5 @@ def test():
     print(parser.parse("puis dix-sans l'accusé"))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

@@ -5,6 +5,7 @@
 # originally released under the Apache 2 license, a copy
 # is available in LICENSE-apache.
 """Wrapper around CSM from SesameAI."""
+
 import argparse
 import sys
 import json
@@ -19,7 +20,7 @@ from external_tools.speaker import get_speaker_audio, Smoother
 def main():
     stdout = sys.stdout
     sys.stdout = sys.stderr
-    sys.path.insert(1, './csm')
+    sys.path.insert(1, "./csm")
     # Disable Triton compilation
     os.environ["NO_TORCH_COMPILE"] = "1"
 
@@ -29,7 +30,7 @@ def main():
     parser.add_argument("-s", "--single-mode", choices=["double", "default"], default="default")
     parser.add_argument("-c", "--context", type=int)
     parser.add_argument("-t", "--turns", type=int, default=1)
-    parser.add_argument("-d", "--max-audio-duration", type=float, default=10.)
+    parser.add_argument("-d", "--max-audio-duration", type=float, default=10.0)
     args = parser.parse_args()
     # Select the best available device, skipping MPS due to float64 limitations
     if torch.cuda.is_available():
@@ -48,39 +49,39 @@ def main():
         assert len(batch) == 1
         item = batch[0]
 
-        single_speaker = len(item['speaker_audios']) == 1
+        single_speaker = len(item["speaker_audios"]) == 1
         if single_speaker:
             if args.single_mode == "double":
-                item['speaker_audios'] *= 2
+                item["speaker_audios"] *= 2
                 single_speaker = False
             else:
                 assert args.single_mode == "default"
 
         prompt_segments = []
-        for idx, speaker_audio in enumerate(item['speaker_audios']):
+        for idx, speaker_audio in enumerate(item["speaker_audios"]):
             audio, text = get_speaker_audio(speaker_audio, generator.sample_rate)
             prompt = Segment(text=text, speaker=idx, audio=audio[0])
             prompt_segments.append(prompt)
 
         conversation = []
-        for idx, turn in enumerate(item['turns']):
+        for idx, turn in enumerate(item["turns"]):
             conversation.append({"text": turn, "speaker_id": idx % len(prompt_segments)})
 
         # Generate each utterance
         generated_segments = []
         context = []
         segments = []
-        start = 0.
+        start = 0.0
         n_speakers = len(prompt_segments)
         for utterance in conversation:
             print(f"Generating: {utterance['text']}")
             trials = 5
-            spk_id = utterance['speaker_id']
+            spk_id = utterance["speaker_id"]
             if args.context is not None:
                 if args.context == 0:
                     context = []
                 else:
-                    context = context[-args.context:]
+                    context = context[-args.context :]
 
             for trial in range(trials):
                 this_prompts = prompt_segments
@@ -107,7 +108,7 @@ def main():
                 print("new speaker list", [x.speaker for x in this_context], "next", new_spk_id)
                 try:
                     audio_tensor = generator.generate(
-                        text=utterance['text'],
+                        text=utterance["text"],
                         speaker=new_spk_id,
                         context=this_context,
                         max_audio_length_ms=args.max_audio_duration * 1000,
@@ -120,7 +121,7 @@ def main():
                         if trial == trials - 2:
                             context = []
                         else:
-                            context = context[len(prompt_segments):]
+                            context = context[len(prompt_segments) :]
                     else:
                         context = []
                         raise
@@ -133,7 +134,7 @@ def main():
                     duration = audio.shape[-1] / generator.sample_rate
                     segments.append((spk_id, (start, start + duration)))
                     start += duration
-                    segment = Segment(text=utterance['text'], speaker=utterance['speaker_id'], audio=audio_tensor)
+                    segment = Segment(text=utterance["text"], speaker=utterance["speaker_id"], audio=audio_tensor)
                     generated_segments.append(segment)
                     context.append(segment)
                     break
@@ -141,13 +142,9 @@ def main():
         # Concatenate all generations
         all_audio = torch.cat([seg.audio for seg in generated_segments], dim=0)
         all_audio.clamp_(-0.99, 0.99)
-        torchaudio.save(
-            item['output_file'],
-            all_audio.unsqueeze(0).cpu(),
-            generator.sample_rate
-        )
-        with open(Path(item['output_file']).with_suffix('.segments.json'), 'w') as f:
-            json.dump({'segments': segments}, f)
+        torchaudio.save(item["output_file"], all_audio.unsqueeze(0).cpu(), generator.sample_rate)
+        with open(Path(item["output_file"]).with_suffix(".segments.json"), "w") as f:
+            json.dump({"segments": segments}, f)
         print(f"Successfully generated {item['output_file']}")
         stdout.write("external_tts:" + json.dumps({"status": "ok"}) + "\n")
         stdout.flush()

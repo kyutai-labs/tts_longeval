@@ -2,6 +2,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 "Wrapper around DIA https://github.com/nari-labs/dia."
+
 import argparse
 from collections import deque
 import json
@@ -16,9 +17,12 @@ from external_tools.speaker import get_speaker_audio, Smoother
 
 
 def build_audio_text(
-        model, entries: list[tuple[int, str, torch.Tensor | None]],
-        audio_prompts: list[torch.Tensor],
-        text_prompts: list[str], context_length: int):
+    model,
+    entries: list[tuple[int, str, torch.Tensor | None]],
+    audio_prompts: list[torch.Tensor],
+    text_prompts: list[str],
+    context_length: int,
+):
     speakers = {}
     for speaker, *_ in entries[context_length:]:
         if speaker not in speakers:
@@ -50,7 +54,8 @@ def build_audio_text(
 
     audio = torch.cat(audios, dim=-1)
     from dia.model import DEFAULT_SAMPLE_RATE  # type: ignore
-    sphn.write_wav('/home/alex/tmp/dbg_context.wav', audio.numpy(), DEFAULT_SAMPLE_RATE)
+
+    sphn.write_wav("/home/alex/tmp/dbg_context.wav", audio.numpy(), DEFAULT_SAMPLE_RATE)
     audio_tokens = model._encode(audio.to(model.device))
     text = " ".join(texts)
     print("GENERATING", text)
@@ -58,18 +63,19 @@ def build_audio_text(
 
 
 def main():
-    sys.path.insert(1, './dia')
+    sys.path.insert(1, "./dia")
     from dia.model import Dia, DEFAULT_SAMPLE_RATE  # type: ignore
+
     stdout = sys.stdout
     sys.stdout = sys.stderr
-    device = torch.device('cuda')
+    device = torch.device("cuda")
 
     model = Dia.from_pretrained("nari-labs/Dia-1.6B", compute_dtype="float16", device=device)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-t", "--turns", type=int, default=2)
     parser.add_argument("-c", "--context", type=int, default=2)
-    parser.add_argument("--cfg-scale", type=float, default=3.)
+    parser.add_argument("--cfg-scale", type=float, default=3.0)
     args = parser.parse_args()
 
     while True:
@@ -77,7 +83,7 @@ def main():
         items = json.loads(line)
         assert len(items) == 1
         item = items[0]
-        speaker_audios = item['speaker_audios']
+        speaker_audios = item["speaker_audios"]
         text_prompts = []
         audio_prompts = []
 
@@ -87,10 +93,10 @@ def main():
             audio_prompts.append(audio)
             text_prompts.append(text)
 
-        todos = deque((idx % len(speaker_audios), turn) for idx, turn in enumerate(item['turns']))
+        todos = deque((idx % len(speaker_audios), turn) for idx, turn in enumerate(item["turns"]))
         context = []
         segments = []
-        start = 0.
+        start = 0.0
 
         all_wavs = []
 
@@ -98,7 +104,7 @@ def main():
             while todos:
                 entries = []
                 if args.context:
-                    context = context[-args.context:]
+                    context = context[-args.context :]
                 else:
                     context = []
                 entries += context
@@ -141,12 +147,12 @@ def main():
                             output = None
                         break
             output = torch.cat(all_wavs, dim=-1)
-            print("SAVING", item['output_file'], output.shape)
+            print("SAVING", item["output_file"], output.shape)
             output.clamp(-0.99, 0.99)
-            sphn.write_wav(item['output_file'], output.numpy()[0], DEFAULT_SAMPLE_RATE)
+            sphn.write_wav(item["output_file"], output.numpy()[0], DEFAULT_SAMPLE_RATE)
             if segments:
-                with open(Path(item['output_file']).with_suffix('.segments.json'), 'w') as f:
-                    json.dump({'segments': segments}, f)
+                with open(Path(item["output_file"]).with_suffix(".segments.json"), "w") as f:
+                    json.dump({"segments": segments}, f)
             stdout.write("external_tts:" + json.dumps({"status": "ok"}) + "\n")
             stdout.flush()
         except RuntimeError:

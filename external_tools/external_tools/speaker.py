@@ -22,7 +22,7 @@ def hf_get(filename: str | Path) -> Path:
         parts = filename.removeprefix("hf-dataset://").split("/")
         repo_name = parts[0] + "/" + parts[1]
         filename = "/".join(parts[2:])
-        return Path(hf_hub_download(repo_name, filename, repo_type='dataset'))
+        return Path(hf_hub_download(repo_name, filename, repo_type="dataset"))
     elif filename.startswith("file://"):
         # Provide a way to force the read of a local file.
         filename = filename.removeprefix("file://")
@@ -35,8 +35,8 @@ def get_speaker_audio(path_or_url: str, sample_rate: int) -> tuple[torch.Tensor,
     wav_path = hf_get(path_or_url)
     wav, _ = sphn.read(wav_path, sample_rate=sample_rate)
     wav = torch.from_numpy(wav).float()
-    text_url = path_or_url.rsplit('.', 1)[0] + '.txt'
+    text_url = path_or_url.rsplit(".", 1)[0] + ".txt"
     text_path = hf_get(text_url)
-    text = text_path.read_text(encoding='utf8').strip()
+    text = text_path.read_text(encoding="utf8").strip()
     wav = Smoother()(wav)
     return wav, text

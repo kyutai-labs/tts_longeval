@@ -24,8 +24,7 @@ def load_models():
     model_name = "canopylabs/orpheus-tts-0.1-pretrained"
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     snac_model = SNAC.from_pretrained("hubertsiuzdak/snac_24khz")
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name, torch_dtype=torch.bfloat16, device_map=0)
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=torch.bfloat16, device_map=0)
     return tokenizer, snac_model, model
 
 
@@ -39,8 +38,9 @@ def prepare_prompt(tokenizer, snac_model, audio_array, audio_transcript, text_to
 
     input_ids = prompt_tokked["input_ids"]
 
-    zeroprompt_input_ids = torch.cat([
-        start_tokens, input_ids, end_tokens, torch.tensor([myts]), final_tokens], dim=1)  # SOH SOT Text EOT EOH
+    zeroprompt_input_ids = torch.cat(
+        [start_tokens, input_ids, end_tokens, torch.tensor([myts]), final_tokens], dim=1
+    )  # SOH SOT Text EOT EOH
 
     prompts = [text_to_generate]
 
@@ -58,9 +58,13 @@ def prepare_prompt(tokenizer, snac_model, audio_array, audio_transcript, text_to
     for modified_input_ids in all_modified_input_ids:
         padding = max_length - modified_input_ids.shape[1]
         padded_tensor = torch.cat([torch.full((1, padding), 128263, dtype=torch.int64), modified_input_ids], dim=1)
-        attention_mask = torch.cat([
-            torch.zeros((1, padding), dtype=torch.int64),
-            torch.ones((1, modified_input_ids.shape[1]), dtype=torch.int64)], dim=1)
+        attention_mask = torch.cat(
+            [
+                torch.zeros((1, padding), dtype=torch.int64),
+                torch.ones((1, modified_input_ids.shape[1]), dtype=torch.int64),
+            ],
+            dim=1,
+        )
         all_padded_tensors.append(padded_tensor)
         all_attention_masks.append(attention_mask)
 
@@ -82,13 +86,13 @@ def tokenise_audio(snac_model, waveform):
 
         all_codes = []
         for i in range(codes[0].shape[1]):
-            all_codes.append(codes[0][0][i].item()+128266)  # noqa
-            all_codes.append(codes[1][0][2*i].item()+128266+4096)  # noqa
-            all_codes.append(codes[2][0][4*i].item()+128266+(2*4096))  # noqa
-            all_codes.append(codes[2][0][(4*i)+1].item()+128266+(3*4096))  # noqa
-            all_codes.append(codes[1][0][(2*i)+1].item()+128266+(4*4096))  # noqa
-            all_codes.append(codes[2][0][(4*i)+2].item()+128266+(5*4096))  # noqa
-            all_codes.append(codes[2][0][(4*i)+3].item()+128266+(6*4096))  # noqa
+            all_codes.append(codes[0][0][i].item() + 128266)  # noqa
+            all_codes.append(codes[1][0][2 * i].item() + 128266 + 4096)  # noqa
+            all_codes.append(codes[2][0][4 * i].item() + 128266 + (2 * 4096))  # noqa
+            all_codes.append(codes[2][0][(4 * i) + 1].item() + 128266 + (3 * 4096))  # noqa
+            all_codes.append(codes[1][0][(2 * i) + 1].item() + 128266 + (4 * 4096))  # noqa
+            all_codes.append(codes[2][0][(4 * i) + 2].item() + 128266 + (5 * 4096))  # noqa
+            all_codes.append(codes[2][0][(4 * i) + 3].item() + 128266 + (6 * 4096))  # noqa
         return all_codes
 
 
@@ -101,7 +105,7 @@ def convert_to_audio(snac_model, generated_ids):
 
     if len(token_indices[1]) > 0:
         last_occurrence_idx = token_indices[1][-1].item()
-        cropped_tensor = generated_ids[:, last_occurrence_idx + 1:]
+        cropped_tensor = generated_ids[:, last_occurrence_idx + 1 :]
     else:
         cropped_tensor = generated_ids
 
@@ -124,17 +128,19 @@ def convert_to_audio(snac_model, generated_ids):
         layer_1 = []
         layer_2 = []
         layer_3 = []
-        for i in range((len(code_list)+1)//7):  # noqa
-            layer_1.append(code_list[7*i])  # noqa
-            layer_2.append(code_list[7*i+1]-4096)  # noqa
-            layer_3.append(code_list[7*i+2]-(2*4096))  # noqa
-            layer_3.append(code_list[7*i+3]-(3*4096))  # noqa
-            layer_2.append(code_list[7*i+4]-(4*4096))  # noqa
-            layer_3.append(code_list[7*i+5]-(5*4096))  # noqa
-            layer_3.append(code_list[7*i+6]-(6*4096))  # noqa
-        codes = [torch.tensor(layer_1).unsqueeze(0),
-                 torch.tensor(layer_2).unsqueeze(0),
-                 torch.tensor(layer_3).unsqueeze(0)]
+        for i in range((len(code_list) + 1) // 7):  # noqa
+            layer_1.append(code_list[7 * i])  # noqa
+            layer_2.append(code_list[7 * i + 1] - 4096)  # noqa
+            layer_3.append(code_list[7 * i + 2] - (2 * 4096))  # noqa
+            layer_3.append(code_list[7 * i + 3] - (3 * 4096))  # noqa
+            layer_2.append(code_list[7 * i + 4] - (4 * 4096))  # noqa
+            layer_3.append(code_list[7 * i + 5] - (5 * 4096))  # noqa
+            layer_3.append(code_list[7 * i + 6] - (6 * 4096))  # noqa
+        codes = [
+            torch.tensor(layer_1).unsqueeze(0),
+            torch.tensor(layer_2).unsqueeze(0),
+            torch.tensor(layer_3).unsqueeze(0),
+        ]
         audio_hat = snac_model.decode(codes)
         return audio_hat
 
@@ -153,8 +159,9 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--max-turns", type=int, help="Maximum number of turns to merge.")
-    parser.add_argument("--context", type=int, default=1,
-                        help="Context to provide when doing needing than one generation.")
+    parser.add_argument(
+        "--context", type=int, default=1, help="Context to provide when doing needing than one generation."
+    )
     args = parser.parse_args()
 
     tokenizer, snac_model, model = load_models()
@@ -167,7 +174,7 @@ def main():
         item = batch[0]
 
         speakers = []
-        for speaker_audio in item['speaker_audios']:
+        for speaker_audio in item["speaker_audios"]:
             audio, text = get_speaker_audio(speaker_audio, 24000)
             speakers.append((audio.numpy()[0], text))
         single_speaker = len(speakers) == 1
@@ -175,10 +182,10 @@ def main():
         all_audios = []
         all_text = []
         segments = []
-        start = 0.
+        start = 0.0
         sample_rate = 24000
 
-        turns = [(idx % len(speakers), turn) for idx, turn in enumerate(item['turns'])]
+        turns = [(idx % len(speakers), turn) for idx, turn in enumerate(item["turns"])]
 
         while turns:
             if single_speaker:
@@ -193,8 +200,8 @@ def main():
             speaker_audio, speaker_text = speakers[speaker_index]
 
             if single_speaker and args.context:
-                audio_context = [torch.from_numpy(speaker_audio)] + all_audios[-args.context:]
-                text_context = [speaker_text] + all_text[-args.context:]
+                audio_context = [torch.from_numpy(speaker_audio)] + all_audios[-args.context :]
+                text_context = [speaker_text] + all_text[-args.context :]
                 speaker_text = " ".join(text_context)
                 speaker_audio = torch.cat(audio_context, dim=-1).numpy()
 
@@ -205,7 +212,8 @@ def main():
                 to_generate = " ".join(turn.strip() for _, turn in turns[:turns_to_generate])
                 print("Generating", to_generate)
                 input_ids, attention_mask = prepare_prompt(
-                    tokenizer, snac_model, speaker_audio, speaker_text, to_generate)
+                    tokenizer, snac_model, speaker_audio, speaker_text, to_generate
+                )
                 print(input_ids.shape, attention_mask.shape)
                 max_length = 8192
                 generated_ids = model.generate(
@@ -244,11 +252,11 @@ def main():
         wav = torch.cat(all_audios, dim=-1)
         wav.clamp_(-0.99, 0.99)
 
-        output_file = Path(item['output_file'])
+        output_file = Path(item["output_file"])
         sphn.write_wav(output_file, wav.numpy(), sample_rate)
-        with open(output_file.with_suffix('.segments.json'), 'w') as f:
-            json.dump({'segments': segments}, f)
-        print("saved", item['output_file'])
+        with open(output_file.with_suffix(".segments.json"), "w") as f:
+            json.dump({"segments": segments}, f)
+        print("saved", item["output_file"])
         stdout.write("external_tts:" + json.dumps({"status": "ok"}) + "\n")
         stdout.flush()
 

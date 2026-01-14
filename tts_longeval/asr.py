@@ -2,6 +2,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 """Definition of the ASR models and tasks used to compute the WER."""
+
 from abc import abstractmethod, ABC
 import logging
 from pathlib import Path
@@ -20,7 +21,7 @@ from .utils import write_and_rename
 
 
 logger = logging.Logger(__name__)
-ASR = tp.TypeVar('ASR', bound='BaseASR')
+ASR = tp.TypeVar("ASR", bound="BaseASR")
 AlignedTranscript = list[tuple[str, tuple[float, float]]]
 
 
@@ -31,12 +32,10 @@ class LoadableASR(Loadable[ASR]):
 class BaseASR(ABC):
     @property
     @abstractmethod
-    def sample_rate(self) -> int:
-        ...
+    def sample_rate(self) -> int: ...
 
     @abstractmethod
-    def transcribe(self, audio: torch.Tensor, language: str) -> AlignedTranscript:
-        ...
+    def transcribe(self, audio: torch.Tensor, language: str) -> AlignedTranscript: ...
 
     def close(self) -> None:
         pass
@@ -45,12 +44,12 @@ class BaseASR(ABC):
 class WhisperHFASRConfig(BaseModel, LoadableASR):
     model_name: str
 
-    def get(self) -> 'WhisperHFASR':
+    def get(self) -> "WhisperHFASR":
         return WhisperHFASR(self.model_name)
 
 
 class WhisperHFASR(BaseASR):
-    def __init__(self, model_name: str = 'openai/whisper-large-v3'):
+    def __init__(self, model_name: str = "openai/whisper-large-v3"):
         self.pipeline = pipeline(
             "automatic-speech-recognition",
             model=f"{model_name}",
@@ -60,7 +59,8 @@ class WhisperHFASR(BaseASR):
             },
             torch_dtype=torch.float16,
             return_timestamps="word",
-            device=torch.device('cuda'))
+            device=torch.device("cuda"),
+        )
         # the following suppresses a warning when setting the language to transcribe.
         assert self.pipeline.generation_config is not None
         self.pipeline.generation_config.forced_decoder_ids = None
@@ -73,26 +73,24 @@ class WhisperHFASR(BaseASR):
     def sample_rate(self):
         return 16000
 
-    def transcribe(self, audio: torch.Tensor, language: str = 'en') -> AlignedTranscript:
+    def transcribe(self, audio: torch.Tensor, language: str = "en") -> AlignedTranscript:
         assert audio.dim() == 2, "Audio must be [C, T]"
-        res = self.pipeline(
-            audio.mean(0).cpu().numpy(),
-            generate_kwargs={"task": "transcribe", "language": language})
+        res = self.pipeline(audio.mean(0).cpu().numpy(), generate_kwargs={"task": "transcribe", "language": language})
         assert res is not None
         assert isinstance(res, dict)
         out: list[tuple[str, tuple[float, float]]] = []
-        for chunk in res['chunks']:
-            out.append((chunk['text'], chunk['timestamp']))
+        for chunk in res["chunks"]:
+            out.append((chunk["text"], chunk["timestamp"]))
 
         return out
 
 
 class ASRConfig(BaseModel):
-    provider: str = 'whisper_hf'
+    provider: str = "whisper_hf"
     whisper_hf: WhisperHFASRConfig
 
     def get(self) -> LoadableASR:
-        if self.provider == 'whisper_hf':
+        if self.provider == "whisper_hf":
             return self.whisper_hf
         else:
             raise ValueError(f"Invalid ASR provider {self.provider}")
@@ -114,7 +112,7 @@ class ASRTask(BatchedTask[ASR, tuple[Sample, Path]]):
                 logger.error("Error while transcribing %s: %r", file, exc)
                 continue
             text = "".join(w for w, _ in chunks).strip()
-            file.with_suffix('.txt').write_text(text)
-            asr_file = file.with_suffix('.asr.json')
-            with write_and_rename(asr_file, 'w') as fout:
-                json.dump({'chunks': chunks}, fout)
+            file.with_suffix(".txt").write_text(text)
+            asr_file = file.with_suffix(".asr.json")
+            with write_and_rename(asr_file, "w") as fout:
+                json.dump({"chunks": chunks}, fout)

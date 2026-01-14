@@ -2,6 +2,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 """Main config definition for the TOML files."""
+
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -17,8 +18,8 @@ from .tts import ExternalTTSConfig, ElevenAPIConfig
 class MainConfig(BaseModel):
     output_folder: Path
     debug: bool = False
-    queue_addr: str = 'tcp://*:34873'
-    output_format: str = 'wav'
+    queue_addr: str = "tcp://*:34873"
+    output_format: str = "wav"
 
 
 class Config(BaseModel):

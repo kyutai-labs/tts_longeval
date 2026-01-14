@@ -2,6 +2,7 @@
 # This source code is licensed under the license found in the
 # LICENSE file in the root directory of this source tree.
 """WER metric."""
+
 from collections import defaultdict
 from functools import cache, partial
 import logging
@@ -23,12 +24,12 @@ def wer_per_quantile(ref: str, hyp: str, quantiles: list[float]) -> list[float]:
     p = jiwer.process_words(ref, hyp)
     errors = defaultdict(float)
     for ali in p.alignments[0]:
-        if ali.type == 'equal':
+        if ali.type == "equal":
             continue
-        elif ali.type in ['substitute', 'delete']:
+        elif ali.type in ["substitute", "delete"]:
             for idx in range(ali.ref_start_idx, ali.ref_end_idx):
-                errors[idx] += 1.
-        elif ali.type == 'insert':
+                errors[idx] += 1.0
+        elif ali.type == "insert":
             errors[ali.ref_start_idx] += ali.hyp_end_idx - ali.hyp_start_idx
         else:
             raise ValueError(f"Bad type {ali.type}")
@@ -50,9 +51,9 @@ def f5_norm(x: str, seed_mode: bool = False) -> str:
     for a in string.punctuation:
         if seed_mode and a == "'":
             continue
-        x = x.replace(a, '')
-    while '  ' in x:
-        x = x.replace('  ', ' ')
+        x = x.replace(a, "")
+    while "  " in x:
+        x = x.replace("  ", " ")
     x = x.lower()
     return x
 
@@ -60,9 +61,9 @@ def f5_norm(x: str, seed_mode: bool = False) -> str:
 @cache
 def get_normalizer(name: str, language: str) -> tp.Callable[[str], str]:
     if name == "whisper":
-        if language == 'fr':
+        if language == "fr":
             return FrenchNormalizer()
-        elif language == 'en':
+        elif language == "en":
             return EnglishTextNormalizer()
         else:
             return BasicTextNormalizer(remove_diacritics=True)
@@ -74,11 +75,12 @@ def get_normalizer(name: str, language: str) -> tp.Callable[[str], str]:
         raise ValueError(f"Unknown normalizer {name}.")
 
 
-def get_wers(sample: Sample, audio_file: Path, quantiles: list[float],
-             normalizer: tp.Callable[[str], str]) -> dict[str, float] | None:
-    txt_file = audio_file.with_suffix('.txt')
+def get_wers(
+    sample: Sample, audio_file: Path, quantiles: list[float], normalizer: tp.Callable[[str], str]
+) -> dict[str, float] | None:
+    txt_file = audio_file.with_suffix(".txt")
     if not txt_file.exists():
-        logger.debug('Missing transcript file: %s', txt_file)
+        logger.debug("Missing transcript file: %s", txt_file)
         return None
 
     estimate = txt_file.read_text().strip()
@@ -86,7 +88,7 @@ def get_wers(sample: Sample, audio_file: Path, quantiles: list[float],
     reference = normalizer(" ".join(x.strip() for x in sample.turns))
     wer = jiwer.wer(reference, estimate)
     wers = wer_per_quantile(reference, estimate, quantiles)
-    names = ['wer']
+    names = ["wer"]
     for q in quantiles:
-        names += [f'w_q{q}']
+        names += [f"w_q{q}"]
     return {name: value for name, value in zip(names, [wer] + wers)}

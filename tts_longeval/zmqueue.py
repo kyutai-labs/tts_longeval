@@ -3,6 +3,7 @@
 # LICENSE file in the root directory of this source tree.
 """A ZeroMQ based job queue, with the goal of having no external dependency, e.g. redis.
 Not the most robust, but in case something get stucks, one can always restart the whole command."""
+
 from collections import deque
 from dataclasses import dataclass, field
 from contextlib import ExitStack
@@ -17,7 +18,7 @@ from pydantic import BaseModel
 import zmq
 
 
-A = tp.TypeVar('A')
+A = tp.TypeVar("A")
 logger = logging.getLogger(__name__)
 
 
@@ -75,6 +76,7 @@ class _WithNameAndReqSocket(_WithExitStack):
     Args:
         name: name of the queue to interact with.
         address: address of the queue server."""
+
     def __init__(self, name: str, address: str):
         super().__init__()
         self.name = name
@@ -101,6 +103,7 @@ class _WithNameAndReqSocket(_WithExitStack):
 
 class Pusher(tp.Generic[A], _WithNameAndReqSocket):
     """Client to `ZMQueue`, can push items to it."""
+
     def push(self, x: A) -> None:
         self._ensure()
         req = PushRequest(queue=self.name, item=x)
@@ -112,6 +115,7 @@ class Pusher(tp.Generic[A], _WithNameAndReqSocket):
 
 class Puller(tp.Generic[A], _WithNameAndReqSocket):
     """Client to `ZMQueue`, can pull items from it."""
+
     def pull(self, num_items: int = 1) -> list[A]:
         self._ensure()
         req = PullRequest(queue=self.name, num_items=num_items)
@@ -124,6 +128,7 @@ class Puller(tp.Generic[A], _WithNameAndReqSocket):
 class Queue(tp.Generic[A]):
     """Represents a queue. It can get pickled and passed to a worker, which can
     call either `pusher` or `puller` to get a client to it.."""
+
     def __init__(self, name: str, pull_address: str, push_address: str):
         self.name = name
         self.pull_address = pull_address
@@ -138,7 +143,8 @@ class Queue(tp.Generic[A]):
 
 class ZMQueue(_WithExitStack):
     """ZMQueue service, acting as a server on both a `pull_address` and `push_address`."""
-    def __init__(self, pull_address: str, push_address: str = "inproc://zmqueue", log_every_sec: float = 60.):
+
+    def __init__(self, pull_address: str, push_address: str = "inproc://zmqueue", log_every_sec: float = 60.0):
         super().__init__()
         self.pull_address = pull_address
         self.push_address = push_address
@@ -202,7 +208,7 @@ class ZMQueue(_WithExitStack):
         per_row = 3
         rows = []
         for offset in range(0, len(cols), per_row):
-            rows.append(", ".join(cols[offset:offset + per_row]))
+            rows.append(", ".join(cols[offset : offset + per_row]))
         usage = "\n".join(rows)
         logger.info("ZMQueue usage:\n%s", usage)
 
@@ -229,7 +235,7 @@ class ZMQueue(_WithExitStack):
 
     def new_queue(self, name: str) -> Queue:
         """Declare a new named queue on the service."""
-        prefix = 'tcp://*:'
+        prefix = "tcp://*:"
         if self.pull_address.startswith(prefix):
             local_ip = get_local_ip()
             real_pull_address = f"tcp://{local_ip}:" + self.pull_address.removeprefix(prefix)

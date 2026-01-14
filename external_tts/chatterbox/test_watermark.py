@@ -3,6 +3,7 @@
 # LICENSE file in the root directory of this source tree.
 # uv run --with=julius,moshi test_watermark.py FOLDER
 """Script used to test the resilience of a watermark to encoding with Mimi."""
+
 import argparse
 from pathlib import Path
 import sphn
@@ -16,10 +17,10 @@ import torch
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--segment-duration', type=float, default=10.)
-    parser.add_argument('--nq', type=int, default=32)
-    parser.add_argument('--device', default='cpu')
-    parser.add_argument('folder', type=Path)
+    parser.add_argument("--segment-duration", type=float, default=10.0)
+    parser.add_argument("--nq", type=int, default=32)
+    parser.add_argument("--device", default="cpu")
+    parser.add_argument("folder", type=Path)
     args = parser.parse_args()
     torch.set_num_threads(8)
 
@@ -28,10 +29,10 @@ def main():
     mimi = loaders.get_mimi(mimi_weight, device=args.device)
     mimi.set_num_codebooks(args.nq)
 
-    total_found = 0.
-    total_mimi_found = 0.
-    total = 0.
-    files = args.folder.glob('**/*.wav')
+    total_found = 0.0
+    total_mimi_found = 0.0
+    total = 0.0
+    files = args.folder.glob("**/*.wav")
     for file in files:
         print(file)
         wav_np, sr = sphn.read(file)
@@ -39,7 +40,7 @@ def main():
         le = wav.shape[-1]
         segment = int(sr * args.segment_duration)
         for offset in range(0, le - segment // 2, segment):
-            chunk = wav[..., offset: offset + segment].mean(dim=0)
+            chunk = wav[..., offset : offset + segment].mean(dim=0)
 
             # Audio is already watermarked by Chatterbox.
             watermarked_audio = chunk.numpy()
