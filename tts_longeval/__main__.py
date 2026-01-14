@@ -124,6 +124,7 @@ def main():
     tts_models: dict[str, LoadableTTS] = {}
     to_load = list(config.tts.items())
     to_load += list(config.tts11.items())
+    to_load += list(config.ttscartesia.items())
     for name, tts_config in to_load:
         tts_model = tts_config.get(name)
         if tts_model is None:
@@ -159,6 +160,7 @@ def main():
                 if missing_tag:
                     continue
                 output_file = this_output_folder / (sample.id + f".{config.main.output_format}")
+                output_file.parent.mkdir(exist_ok=True, parents=True)
                 all_pairs.append((sample, output_file))
                 pairs_per_dataset_per_method[dataset][tts_name].append((sample, output_file))
                 pairs_per_method[tts_name].append((sample, output_file))
