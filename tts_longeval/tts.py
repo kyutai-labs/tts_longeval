@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from .data import Sample
 from .loadable import Loadable
 from .task import BatchedTask
+from .utils import retry
 
 TTS = tp.TypeVar("TTS", bound="BaseTTS")
 logger = logging.getLogger(__name__)
@@ -321,3 +322,143 @@ class ElevenAPIConfig(BaseModel):
         if not self.active:
             return None
         return LoadableElevenAPI(id, self.model_id, self.supported_languages, self.need_tags)
+
+
+class LoadableCartesiaAPI(LoadableTTS["LoadableCartesiaAPI"]):
+    def __init__(
+        self,
+        id: str,
+        model_id: str,
+        supported_languages: list[str],
+        need_tags: list[str],
+    ):
+        from cartesia import Cartesia
+
+        api_key = os.environ["CARTESIA_API_KEY"]
+        self.client = Cartesia(api_key=api_key)
+
+        self.model_id = model_id
+        self._id = id
+        self._supported_languages = supported_languages
+        self._need_tags = need_tags
+
+    def close(self):
+        pass
+
+    def get(self) -> "LoadableCartesiaAPI":
+        return self
+
+    @property
+    def max_batch_size(self):
+        return 1
+
+    @property
+    def is_api(self) -> bool:
+        return True
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def supported_languages(self) -> list[str]:
+        return self._supported_languages
+
+    @property
+    def need_tags(self) -> list[str]:
+        return self._need_tags
+
+    @retry(max_retries=3)
+    def _list_voices(self, starting_after: str | None = None):
+        return self.client.voices.list(limit=100, starting_after=starting_after).items
+
+    @property
+    @cache
+    def voice_ids(self) -> dict[str, str]:
+        out = {}
+        next_voices = []
+        while True:
+            next_voices = self._list_voices(next_voices[-1].id if next_voices else None)
+            if next_voices:
+                out |= {voice.name: voice.id for voice in next_voices}
+            else:
+                break
+        return out
+
+    @retry(max_retries=3)
+    def _gen_one(self, voice_name: str, text: str) -> tuple[torch.Tensor, int]:
+        try:
+            voice_id = self.voice_ids[voice_name]
+        except KeyError:
+            raise ValueError(f"Invalid voice {voice_name}")
+
+        logger.info("Cartesia generating with %s, voice %s: %s", self.model_id, voice_id, text)
+
+        with NamedTemporaryFile(suffix=".wav") as file:
+            bytes_iter = self.client.tts.bytes(
+                model_id=self.model_id,
+                transcript=text,
+                voice={
+                    "mode": "id",
+                    "id": voice_id,
+                },
+                output_format={
+                    "container": "wav",
+                    "sample_rate": 44100,
+                    "encoding": "pcm_f32le",
+                },
+            )
+
+            for chunk in bytes_iter:
+                file.write(chunk)
+            file.flush()
+            wav, sr = sphn.read(file.name)
+            wav = torch.from_numpy(wav)
+            wav = Smoother()(wav)
+        return wav, sr
+
+    def generate_batch(self, samples: list[Sample], output_files: list[Path]) -> None:
+        assert len(samples) == 1
+        sample = samples[0]
+        all_segments = []
+        segments = []
+        out_sample_rate = None
+        if len(sample.speaker_audios) == 1:
+            voice_name = sample.speaker_audios[0].rsplit("/", 1)[-1]
+            text = " ".join(sample.turns)
+            wav, out_sample_rate = self._gen_one(voice_name, text)
+            all_segments.append(wav)
+        else:
+            start = 0
+            for idx, turn in enumerate(sample.turns):
+                speaker_idx = idx % len(sample.speaker_audios)
+                voice_name = sample.speaker_audios[speaker_idx].rsplit("/", 1)[-1]
+                wav, sr = self._gen_one(voice_name, turn)
+                if out_sample_rate is None:
+                    out_sample_rate = sr
+                else:
+                    assert out_sample_rate == sr
+                duration = wav.shape[-1] / sr
+                segments.append((speaker_idx, (start, start + duration)))
+                start += duration
+                all_segments.append(wav)
+        assert out_sample_rate is not None
+        wav = torch.cat(all_segments, dim=-1)
+        wav.clamp_(-0.99, 0.999)
+        sphn.write_wav(output_files[0], wav.numpy(), out_sample_rate)
+        if segments:
+            with open(output_files[0].with_suffix(".segments.json"), "w") as f:
+                json.dump({"segments": segments}, f)
+        output_files[0].with_suffix(".done").touch()
+
+
+class CartesiaAPIConfig(BaseModel):
+    model_id: str
+    active: bool = True
+    supported_languages: list[str] = ["fr", "en", "de", "pt", "es"]
+    need_tags: list[str] = []
+
+    def get(self, id: str) -> LoadableCartesiaAPI | None:
+        if not self.active:
+            return None
+        return LoadableCartesiaAPI(id, self.model_id, self.supported_languages, self.need_tags)

@@ -6,11 +6,16 @@
 import logging
 import os
 import sys
+import time
 import typing as tp
 from contextlib import contextmanager
+from functools import wraps
 from pathlib import Path
 
+import httpx
+
 T = tp.TypeVar("T")
+logger = logging.getLogger(__name__)
 
 
 def get_root() -> Path:
@@ -40,3 +45,31 @@ def init_logging(verbose: bool = False):
         datefmt="%m-%d %H:%M:%S",
         force=True,
     )
+
+
+F = tp.TypeVar("F", bound=tp.Callable[..., tp.Any])
+
+
+def retry(max_retries: int = 3, delay: float = 1.0) -> tp.Callable[[F], F]:
+    def decorator(func: F) -> F:
+        @wraps(func)
+        def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+            last_exception = None
+            for attempt in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except (ConnectionError, ConnectionResetError, httpx.ConnectError) as e:
+                    last_exception = e
+                    if attempt < max_retries:
+                        logger.warning(
+                            f"Connection error on attempt {attempt + 1}/{max_retries + 1}: {e}. "
+                            f"Retrying in {delay:.1f}s..."
+                        )
+                        time.sleep(delay)
+                    else:
+                        logger.error(f"Failed after {max_retries + 1} attempts: {e}")
+            raise last_exception  # type: ignore
+
+        return tp.cast(F, wrapper)
+
+    return decorator

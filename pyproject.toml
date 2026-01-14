@@ -21,6 +21,7 @@ dependencies = [
     "transformers",
     "treetable",
     "external_tools",
+    "httpx>=0.28.1",
 ]
 authors = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
 maintainers = [{name="Alexandre Défossez", email="alex@kyutai.org"}]
