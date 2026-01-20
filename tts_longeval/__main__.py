@@ -125,6 +125,7 @@ def main():
     to_load = list(config.tts.items())
     to_load += list(config.tts11.items())
     to_load += list(config.ttscartesia.items())
+    to_load += list(config.ttsgradium.items())
     for name, tts_config in to_load:
         tts_model = tts_config.get(name)
         if tts_model is None:

@@ -6,6 +6,7 @@
 This allows a good isolation of the dependencies between TTS engines, otherwise, it would
 be a complete hell to support all of them in a single codebase."""
 
+import asyncio
 import json
 import logging
 import os
@@ -19,8 +20,9 @@ from tempfile import NamedTemporaryFile
 
 import sphn
 import torch
-from external_tools.audio import Smoother
 from pydantic import BaseModel
+
+from external_tools.audio import Smoother
 
 from .data import Sample
 from .loadable import Loadable
@@ -462,3 +464,125 @@ class CartesiaAPIConfig(BaseModel):
         if not self.active:
             return None
         return LoadableCartesiaAPI(id, self.model_id, self.supported_languages, self.need_tags)
+
+
+class LoadableGradiumAPI(LoadableTTS["LoadableGradiumAPI"]):
+    def __init__(
+        self,
+        id: str,
+        model_id: str,
+        supported_languages: list[str],
+        need_tags: list[str],
+    ):
+        import gradium
+
+        self._gr = gradium
+
+        api_key = os.environ["GRADIUM_API_KEY"]
+        self.client = gradium.client.GradiumClient(api_key=api_key)
+
+        self.model_id = model_id
+        self._id = id
+        self._supported_languages = supported_languages
+        self._need_tags = need_tags
+        self._voice_ids: dict[str, str] | None = None
+
+    def close(self):
+        pass
+
+    def get(self) -> "LoadableGradiumAPI":
+        return self
+
+    @property
+    def max_batch_size(self):
+        return 1
+
+    @property
+    def is_api(self) -> bool:
+        return True
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def supported_languages(self) -> list[str]:
+        return self._supported_languages
+
+    @property
+    def need_tags(self) -> list[str]:
+        return self._need_tags
+
+    async def _fetch_voice_ids(self) -> dict[str, str]:
+        if self._voice_ids is None:
+            self._voice_ids = {voice["name"]: voice["uid"] for voice in await self._gr.voices.get(self.client)}
+        return self._voice_ids
+
+    async def _gen_one(self, voice_name: str, text: str) -> tuple[torch.Tensor, int]:
+        voices = await self._fetch_voice_ids()
+        try:
+            voice_id = voices[voice_name]
+        except KeyError:
+            raise ValueError(f"Invalid voice {voice_name}")
+
+        logger.info("Gradium generating with %s, voice %s: %s", self.model_id, voice_id, text)
+
+        with NamedTemporaryFile(suffix=".wav") as file:
+            result = await self.client.tts(
+                setup={"model_name": "default", "voice_id": voice_id, "output_format": "wav"}, text=text
+            )
+            file.write(result.raw_data)
+            file.flush()
+            wav, sr = sphn.read(file.name)
+            wav = torch.from_numpy(wav)
+            wav = Smoother()(wav)
+        return wav, sr
+
+    def generate_batch(self, samples: list[Sample], output_files: list[Path]) -> None:
+        asyncio.run(self._generate_batch_async(samples, output_files))
+
+    async def _generate_batch_async(self, samples: list[Sample], output_files: list[Path]) -> None:
+        assert len(samples) == 1
+        sample = samples[0]
+        all_segments = []
+        segments = []
+        out_sample_rate = None
+        if len(sample.speaker_audios) == 1:
+            voice_name = sample.speaker_audios[0].rsplit("/", 1)[-1]
+            text = " ".join(sample.turns)
+            wav, out_sample_rate = await self._gen_one(voice_name, text)
+            all_segments.append(wav)
+        else:
+            start = 0
+            for idx, turn in enumerate(sample.turns):
+                speaker_idx = idx % len(sample.speaker_audios)
+                voice_name = sample.speaker_audios[speaker_idx].rsplit("/", 1)[-1]
+                wav, sr = await self._gen_one(voice_name, turn)
+                if out_sample_rate is None:
+                    out_sample_rate = sr
+                else:
+                    assert out_sample_rate == sr
+                duration = wav.shape[-1] / sr
+                segments.append((speaker_idx, (start, start + duration)))
+                start += duration
+                all_segments.append(wav)
+        assert out_sample_rate is not None
+        wav = torch.cat(all_segments, dim=-1)
+        wav.clamp_(-0.99, 0.999)
+        sphn.write_wav(output_files[0], wav.numpy(), out_sample_rate)
+        if segments:
+            with open(output_files[0].with_suffix(".segments.json"), "w") as f:
+                json.dump({"segments": segments}, f)
+        output_files[0].with_suffix(".done").touch()
+
+
+class GradiumAPIConfig(BaseModel):
+    model_id: str
+    active: bool = True
+    supported_languages: list[str] = ["fr", "en", "de", "pt", "es", "it"]
+    need_tags: list[str] = []
+
+    def get(self, id: str) -> LoadableGradiumAPI | None:
+        if not self.active:
+            return None
+        return LoadableGradiumAPI(id, self.model_id, self.supported_languages, self.need_tags)

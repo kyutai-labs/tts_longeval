@@ -12,7 +12,7 @@ from .data import DatasetConfig
 from .metrics import MetricsConfig
 from .runner import RunnerConfig
 from .speakersim import SpeakerSimilarityConfig
-from .tts import CartesiaAPIConfig, ElevenAPIConfig, ExternalTTSConfig
+from .tts import CartesiaAPIConfig, ElevenAPIConfig, ExternalTTSConfig, GradiumAPIConfig
 
 
 class MainConfig(BaseModel):
@@ -30,5 +30,6 @@ class Config(BaseModel):
     tts: dict[str, ExternalTTSConfig] = {}
     tts11: dict[str, ElevenAPIConfig] = {}
     ttscartesia: dict[str, CartesiaAPIConfig] = {}
+    ttsgradium: dict[str, GradiumAPIConfig] = {}
     speakersim: SpeakerSimilarityConfig = Field(default_factory=SpeakerSimilarityConfig)
     metrics: MetricsConfig = Field(default_factory=MetricsConfig)
