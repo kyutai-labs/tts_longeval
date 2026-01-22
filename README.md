@@ -31,7 +31,9 @@ You will need to download the WavLM speaker similarity model used by [F5-TTS](ht
 
 ### Models
 
-This support the following TTS models: [ElevenLab](https://elevenlabs.io/) (through the API),
+This supports the following TTS models: [ElevenLabs](https://elevenlabs.io/) (via API),
+ [Cartesia](https://cartesia.ai/) (via API),
+ [Gradium](https://gradium.ai/) (via API),
  [Dia](https://github.com/nari-labs/dia), [Orpheus](https://github.com/canopyai/Orpheus-TTS),
  [CSM](https://github.com/SesameAILabs/csm), [Chatterbox](https://github.com/resemble-ai/chatterbox/) and
  [Kyutai DSM TTS](https://github.com/kyutai-labs/delayed-streams-modeling/).
