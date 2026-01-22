@@ -579,7 +579,7 @@ class LoadableGradiumAPI(LoadableTTS["LoadableGradiumAPI"]):
 class GradiumAPIConfig(BaseModel):
     model_id: str
     active: bool = True
-    supported_languages: list[str] = ["fr", "en", "de", "pt", "es", "it"]
+    supported_languages: list[str] = ["fr", "en", "de", "pt", "es"]
     need_tags: list[str] = []
 
     def get(self, id: str) -> LoadableGradiumAPI | None:
